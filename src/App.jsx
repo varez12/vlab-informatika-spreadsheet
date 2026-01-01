@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Grid, List, HelpCircle, ArrowRight, MousePointer2, Info, Settings2, Edit3, Lightbulb, ChevronDown, BookOpen, Sigma, Calculator } from 'lucide-react';
+import { 
+  Table, Grid, List, HelpCircle, ArrowRight, MousePointer2, Info, 
+  Settings2, Edit3, Lightbulb, Play, RotateCcw, ArrowUp, RotateCw, 
+  RotateCcw as RotateLeft, Repeat, Trash2, CheckCircle2, Flag, Bot, 
+  Trophy, Star, ChevronRight, Split, GitBranch, Layers, Zap, Target, 
+  Navigation, BookOpen, X, Sparkles, Cpu, Code2, AlertCircle, LayoutGrid, Home, Code, Menu, ChevronDown
+} from 'lucide-react';
 
-export default function App() {
+// ============================================================
+// MODUL 1: SPREADSHEET LAB (VERSI PALING LENGKAP & DETAIL)
+// ============================================================
+const SpreadsheetLab = () => {
   const [activeTab, setActiveTab] = useState('VLOOKUP');
   const [highlightedCells, setHighlightedCells] = useState([]);
   const [result, setResult] = useState(null);
   
-  // Data Tabel Utama (A1:D5) - Format Vertikal
   const verticalData = [
     ['ID', 'Menu', 'Harga', 'Stok'],
     ['K01', 'Nasi Goreng', '15000', '10'],
@@ -15,138 +23,94 @@ export default function App() {
     ['K04', 'Soto Ayam', '13000', '8']
   ];
 
-  // Data Tabel Omzet (A10:E11) - Format Horizontal
   const horizontalData = [
     ['Bulan', 'Jan', 'Feb', 'Mar', 'Apr'],
     ['Omzet', '200k', '250k', '210k', '300k']
   ];
 
-  // Data Pilihan (A14:C14)
   const chooseData = [['Diskon 5%', 'Diskon 10%', 'Diskon 15%']];
 
   const [inputs, setInputs] = useState({
-    vlookupValue: 'K02',
-    vlookupCol: '2',
-    vlookupRange: 'FALSE',
-    hlookupValue: 'Mar',
-    hlookupRow: '2',
-    hlookupRange: 'FALSE',
-    matchValue: 'Es Teh',
-    matchArray: 'B1:B5',
-    matchType: '0',
-    indexRow: '3',
-    indexCol: '2',
+    vlookupValue: 'K02', vlookupCol: '2', vlookupRange: 'FALSE',
+    hlookupValue: 'Mar', hlookupRow: '2', hlookupRange: 'FALSE',
+    matchValue: 'Es Teh', matchArray: 'B1:B5', matchType: '0',
+    indexRow: '3', indexCol: '2',
     chooseIndex: '1',
-    // New Inputs for Conditional Math
-    countifRange: 'D2:D5',
     countifCriteria: '>10',
-    sumifRange: 'C2:C5',
     sumifCriteria: '>10000',
-    sumifSumRange: 'C2:C5',
-    countifsCrit1: '>5000',
-    countifsCrit2: '<15',
-    sumifsSumRange: 'D2:D5',
-    sumifsCrit1: '>10000',
-    sumifsCrit2: '<15'
+    countifsCrit1: '>5000', countifsCrit2: '<15',
+    sumifsCrit1: '>10000', sumifsCrit2: '<15'
   });
 
   const getMatchOptions = () => {
-    if (inputs.matchArray.includes('A')) return verticalData.slice(1).map(r => r[0]);
-    if (inputs.matchArray.includes('B')) return verticalData.slice(1).map(r => r[1]);
-    if (inputs.matchArray.includes('C')) return verticalData.slice(1).map(r => r[2]);
+    if (inputs.matchArray?.includes('A')) return verticalData.slice(1).map(r => r[0]);
+    if (inputs.matchArray?.includes('B')) return verticalData.slice(1).map(r => r[1]);
+    if (inputs.matchArray?.includes('C')) return verticalData.slice(1).map(r => r[2]);
     return [];
   };
 
   const evaluateCriteria = (value, criteria) => {
-    const strVal = value.toString();
     const numVal = parseFloat(value);
-    
     if (criteria.startsWith('>=')) return numVal >= parseFloat(criteria.slice(2));
     if (criteria.startsWith('<=')) return numVal <= parseFloat(criteria.slice(2));
     if (criteria.startsWith('>')) return numVal > parseFloat(criteria.slice(1));
     if (criteria.startsWith('<')) return numVal < parseFloat(criteria.slice(1));
-    return strVal.toLowerCase() === criteria.toLowerCase();
+    return value.toString().toLowerCase() === criteria.toLowerCase();
   };
 
   const runSimulation = () => {
     let cells = [];
-    let res = 0;
-
+    let res = "";
     try {
       if (activeTab === 'VLOOKUP') {
-        const colIdx = parseInt(inputs.vlookupCol);
         const rowIndex = verticalData.findIndex(row => row[0] === inputs.vlookupValue);
-        if (isNaN(colIdx) || colIdx < 1 || colIdx > 4) res = "#REF!";
-        else if (rowIndex !== -1) {
+        const colIdx = parseInt(inputs.vlookupCol);
+        if (rowIndex !== -1 && colIdx >= 1 && colIdx <= 4) {
           cells = [`v-r${rowIndex}-c0`, `v-r${rowIndex}-c${colIdx - 1}`];
           res = verticalData[rowIndex][colIdx - 1];
-        } else res = "#N/A";
+        } else res = rowIndex === -1 ? "#N/A" : "#REF!";
       } 
       else if (activeTab === 'HLOOKUP') {
-        const rowIdx = parseInt(inputs.hlookupRow);
         const colIndex = horizontalData[0].findIndex(col => col === inputs.hlookupValue);
-        if (isNaN(rowIdx) || rowIdx < 1 || rowIdx > 2) res = "#REF!";
-        else if (colIndex !== -1) {
+        const rowIdx = parseInt(inputs.hlookupRow);
+        if (colIndex !== -1 && rowIdx >= 1 && rowIdx <= 2) {
           cells = [`h-r0-c${colIndex}`, `h-r${rowIdx - 1}-c${colIndex}`];
           res = horizontalData[rowIdx - 1][colIndex];
-        } else res = "#N/A";
+        } else res = colIndex === -1 ? "#N/A" : "#REF!";
       }
       else if (activeTab === 'MATCH') {
-        let colToSearch = 1; 
-        if (inputs.matchArray.includes('A')) colToSearch = 0;
-        if (inputs.matchArray.includes('C')) colToSearch = 2;
+        const colToSearch = inputs.matchArray?.includes('A') ? 0 : inputs.matchArray?.includes('C') ? 2 : 1;
         const rowIndex = verticalData.findIndex(row => row[colToSearch].toString().toLowerCase() === inputs.matchValue.toLowerCase());
-        if (rowIndex !== -1) {
-          cells = [`v-r${rowIndex}-c${colToSearch}`];
-          res = rowIndex + 1;
-        } else res = "#N/A";
+        if (rowIndex !== -1) { cells = [`v-r${rowIndex}-c${colToSearch}`]; res = rowIndex + 1; } else res = "#N/A";
       }
       else if (activeTab === 'INDEX') {
         const r = parseInt(inputs.indexRow) - 1;
         const c = parseInt(inputs.indexCol) - 1;
-        if (!isNaN(r) && !isNaN(c) && verticalData[r] && verticalData[r][c] !== undefined) {
-          cells = [`v-r${r}-c${c}`];
-          res = verticalData[r][c];
-        } else res = "#REF!";
+        if (verticalData[r] && verticalData[r][c] !== undefined) { cells = [`v-r${r}-c${c}`]; res = verticalData[r][c]; } else res = "#REF!";
       }
       else if (activeTab === 'CHOOSE') {
         const idx = parseInt(inputs.chooseIndex) - 1;
-        if (!isNaN(idx) && chooseData[0][idx]) {
-          cells = [`c-r0-c${idx}`];
-          res = chooseData[0][idx];
-        } else res = "#VALUE!";
+        if (chooseData[0][idx]) { cells = [`c-r0-c${idx}`]; res = chooseData[0][idx]; } else res = "#VALUE!";
       }
       else if (activeTab === 'COUNTIF') {
-        const col = 3; // Stok
         let count = 0;
         verticalData.slice(1).forEach((row, i) => {
-          if (evaluateCriteria(row[col], inputs.countifCriteria)) {
-            count++;
-            cells.push(`v-r${i+1}-c${col}`);
-          }
+          if (evaluateCriteria(row[3], inputs.countifCriteria)) { count++; cells.push(`v-r${i+1}-c3`); }
         });
         res = count;
       }
       else if (activeTab === 'SUMIF') {
-        const critCol = 2; // Harga
-        const sumCol = 2; // Harga
         let sum = 0;
         verticalData.slice(1).forEach((row, i) => {
-          if (evaluateCriteria(row[critCol], inputs.sumifCriteria)) {
-            sum += parseFloat(row[sumCol]);
-            cells.push(`v-r${i+1}-c${critCol}`);
-          }
+          if (evaluateCriteria(row[2], inputs.sumifCriteria)) { sum += parseFloat(row[2]); cells.push(`v-r${i+1}-c2`); }
         });
         res = sum;
       }
       else if (activeTab === 'COUNTIFS') {
         let count = 0;
         verticalData.slice(1).forEach((row, i) => {
-          const match1 = evaluateCriteria(row[2], inputs.countifsCrit1); // Harga
-          const match2 = evaluateCriteria(row[3], inputs.countifsCrit2); // Stok
-          if (match1 && match2) {
-            count++;
-            cells.push(`v-r${i+1}-c2`, `v-r${i+1}-c3`);
+          if (evaluateCriteria(row[2], inputs.countifsCrit1) && evaluateCriteria(row[3], inputs.countifsCrit2)) {
+            count++; cells.push(`v-r${i+1}-c2`, `v-r${i+1}-c3`);
           }
         });
         res = count;
@@ -154,11 +118,8 @@ export default function App() {
       else if (activeTab === 'SUMIFS') {
         let sum = 0;
         verticalData.slice(1).forEach((row, i) => {
-          const match1 = evaluateCriteria(row[2], inputs.sumifsCrit1); // Harga
-          const match2 = evaluateCriteria(row[3], inputs.sumifsCrit2); // Stok
-          if (match1 && match2) {
-            sum += parseFloat(row[3]); // Sum Stok
-            cells.push(`v-r${i+1}-c2`, `v-r${i+1}-c3`);
+          if (evaluateCriteria(row[2], inputs.sumifsCrit1) && evaluateCriteria(row[3], inputs.sumifsCrit2)) {
+            sum += parseFloat(row[3]); cells.push(`v-r${i+1}-c2`, `v-r${i+1}-c3`);
           }
         });
         res = sum;
@@ -170,356 +131,558 @@ export default function App() {
 
   useEffect(() => { runSimulation(); }, [activeTab, inputs]);
 
-  const colLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const tabs = ['VLOOKUP', 'HLOOKUP', 'MATCH', 'INDEX', 'CHOOSE', 'COUNTIF', 'SUMIF', 'COUNTIFS', 'SUMIFS'];
 
   const getFormulaInfo = () => {
     switch(activeTab) {
-      case 'VLOOKUP': return {
-        title: "Vertical Lookup (Mencari ke Bawah)",
-        desc: "Mencari data di kolom pertama, lalu mengambil nilai di baris yang sama pada kolom tertentu.",
-        syntax: "=VLOOKUP(nilai_dicari; tabel_data; nomor_kolom; [range_lookup])"
-      };
-      case 'HLOOKUP': return {
-        title: "Horizontal Lookup (Mencari ke Samping)",
-        desc: "Mencari data di baris pertama, lalu mengambil nilai di kolom yang sama pada baris tertentu.",
-        syntax: "=HLOOKUP(nilai_dicari; tabel_data; nomor_baris; [range_lookup])"
-      };
-      case 'MATCH': return {
-        title: "Match (Mencari Posisi)",
-        desc: "Bukan mengambil datanya, tapi mencari tahu 'di urutan ke berapa' data tersebut berada.",
-        syntax: "=MATCH(nilai_dicari; rentang_data; tipe_cocok)"
-      };
-      case 'INDEX': return {
-        title: "Index (Mengambil dari Koordinat)",
-        desc: "Mirip GPS, kamu memberikan nomor baris dan kolom, komputer memberikan isi selnya.",
-        syntax: "=INDEX(tabel_data; nomor_baris; nomor_kolom)"
-      };
-      case 'CHOOSE': return {
-        title: "Choose (Memilih dari Daftar)",
-        desc: "Memilih satu nilai dari beberapa pilihan berdasarkan angka urutan yang diberikan.",
-        syntax: "=CHOOSE(indeks_pilihan; pilihan1; pilihan2; ...)"
-      };
-      case 'COUNTIF': return {
-        title: "Countif (Menghitung Bersyarat)",
-        desc: "Menghitung jumlah sel yang memenuhi satu kriteria tertentu.",
-        syntax: "=COUNTIF(rentang; kriteria)"
-      };
-      case 'SUMIF': return {
-        title: "Sumif (Menjumlahkan Bersyarat)",
-        desc: "Menjumlahkan nilai sel yang memenuhi satu kriteria tertentu.",
-        syntax: "=SUMIF(rentang; kriteria; [rentang_jumlah])"
-      };
-      case 'COUNTIFS': return {
-        title: "Countifs (Banyak Kriteria)",
-        desc: "Menghitung sel berdasarkan banyak kriteria sekaligus (Kriteria 1 DAN Kriteria 2).",
-        syntax: "=COUNTIFS(rentang1; kriteria1; rentang2; kriteria2; ...)"
-      };
-      case 'SUMIFS': return {
-        title: "Sumifs (Banyak Kriteria)",
-        desc: "Menjumlahkan nilai sel berdasarkan banyak kriteria sekaligus.",
-        syntax: "=SUMIFS(rentang_jumlah; rentang1; kriteria1; ...)"
-      };
-      default: return {};
+      case 'VLOOKUP': return { title: "Vertical Lookup", desc: "Mencari data ke bawah pada kolom pertama, lalu mengambil nilai di baris yang sama pada kolom tertentu.", syntax: "=VLOOKUP(nilai_dicari; tabel; nomor_kolom; [range_lookup])" };
+      case 'HLOOKUP': return { title: "Horizontal Lookup", desc: "Mencari data ke samping pada baris pertama, lalu mengambil nilai di kolom yang sama pada baris tertentu.", syntax: "=HLOOKUP(nilai_dicari; tabel; nomor_baris; [range_lookup])" };
+      case 'MATCH': return { title: "Match Function", desc: "Mencari posisi atau nomor urut suatu nilai di dalam daftar atau rentang sel.", syntax: "=MATCH(nilai_dicari; rentang_data; 0)" };
+      case 'INDEX': return { title: "Index Function", desc: "Mengambil nilai dari sebuah sel berdasarkan koordinat nomor baris dan nomor kolom.", syntax: "=INDEX(rentang_tabel; nomor_baris; nomor_kolom)" };
+      case 'CHOOSE': return { title: "Choose Function", desc: "Memilih satu nilai dari daftar pilihan berdasarkan angka urut (index) yang diberikan.", syntax: "=CHOOSE(indeks; pilihan1; pilihan2; ...)" };
+      case 'COUNTIF': return { title: "Countif Function", desc: "Menghitung jumlah sel yang memenuhi satu kriteria atau syarat tertentu.", syntax: "=COUNTIF(rentang; kriteria)" };
+      case 'SUMIF': return { title: "Sumif Function", desc: "Menjumlahkan nilai dalam rentang yang memenuhi satu kriteria atau syarat tertentu.", syntax: "=SUMIF(rentang; kriteria; [rentang_jumlah])" };
+      case 'COUNTIFS': return { title: "Countifs Function", desc: "Menghitung jumlah sel berdasarkan banyak kriteria sekaligus (Kriteria 1 DAN Kriteria 2).", syntax: "=COUNTIFS(r1; k1; r2; k2; ...)" };
+      case 'SUMIFS': return { title: "Sumifs Function", desc: "Menjumlahkan nilai sel berdasarkan banyak kriteria sekaligus (Syarat 1 DAN Syarat 2).", syntax: "=SUMIFS(rentang_jumlah; r1; k1; r2; k2; ...)" };
+      default: return { title: activeTab, desc: "Fungsi referensi dan statistik spreadsheet.", syntax: "Formula" };
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 font-sans text-slate-800 p-4 md:p-8">
-      <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="bg-green-600 p-2 rounded-lg shadow-sm">
-              <Settings2 className="text-white w-6 h-6" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">V-Lab Informatika: <span className="text-green-600">Spreadsheet Lab</span></h1>
-          </div>
-          <p className="text-slate-500 text-sm italic">Eksperimen Interaktif Formula Lookup & Reference untuk Siswa SMP.</p>
+    <div className="flex flex-col h-full w-full bg-slate-50 font-sans text-slate-800 p-4 md:p-8 overflow-y-auto text-left custom-scrollbar">
+      <header className="h-24 mb-6 border-b border-slate-200 flex flex-col justify-center">
+        <div className="flex items-center gap-2 mb-1">
+          <Settings2 className="text-green-600 w-7 h-7" />
+          <h1 className="text-2xl font-bold uppercase tracking-tight">Makmal Spreadsheet Pro</h1>
         </div>
+        <p className="text-slate-500 text-sm italic">Anatomi formula pencarian data dan statistik bersyarat secara mendalam.</p>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
         <div className="lg:col-span-2 space-y-6">
-          {/* Section Penjelasan Konsep */}
-          <div className="bg-green-600 text-white p-5 rounded-2xl shadow-md">
-            <h2 className="flex items-center gap-2 font-bold mb-2">
-              <BookOpen className="w-5 h-5" /> {getFormulaInfo().title}
-            </h2>
-            <p className="text-sm text-green-50 opacity-90 mb-3">{getFormulaInfo().desc}</p>
-            <div className="bg-green-700/50 p-3 rounded-lg font-mono text-xs border border-green-500/30">
+          <div className="bg-green-600 text-white p-6 rounded-2xl shadow-md border-b-4 border-green-700">
+            <h2 className="flex items-center gap-2 font-bold text-lg mb-2"><BookOpen className="w-5 h-5 text-green-200" /> {getFormulaInfo().title}</h2>
+            <p className="text-sm opacity-90 mb-4 leading-relaxed">{getFormulaInfo().desc}</p>
+            <div className="bg-green-800/40 p-4 rounded-xl font-mono text-xs border border-white/10 select-all tracking-wider">
               {getFormulaInfo().syntax}
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-              <Grid className="w-4 h-4" /> Spreadsheet View (Tabel Referensi)
-            </h2>
-            
-            {/* Tabel Vertikal (Utama) */}
-            <div className="mb-6">
-              <p className="text-[10px] text-slate-500 mb-1 italic font-medium">Tabel Vertikal: Range A1:D5 (Data Utama Kantin).</p>
-              <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-slate-100">
-                      <th className="border border-slate-200 p-1 w-10 text-[10px] text-slate-400 bg-slate-50"></th>
-                      {verticalData[0].map((_, i) => (<th key={i} className="border border-slate-200 p-1 text-center font-normal text-slate-500 bg-slate-50 w-32">{colLetters[i]}</th>))}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Grid size={14}/> Worksheet View</h2>
+            <div className="overflow-x-auto rounded-lg border border-slate-200 mb-6 shadow-sm">
+              <table className="w-full border-collapse text-sm text-center">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-500">
+                    <th className="border border-slate-200 p-1 w-10 text-[10px] bg-slate-50"></th>
+                    {['A','B','C','D'].map(l => <th key={l} className="border border-slate-200 p-1 font-normal">{l}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {verticalData.map((row, rIdx) => (
+                    <tr key={rIdx}>
+                      <td className="border border-slate-200 p-1 text-[10px] text-slate-400 bg-slate-50 font-bold">{rIdx + 1}</td>
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx} className={`border border-slate-200 p-2 transition-all duration-300 ${highlightedCells.includes(`v-r${rIdx}-c${cIdx}`) ? 'bg-yellow-100 border-yellow-500 font-bold text-yellow-900 ring-2 ring-yellow-400 ring-inset' : 'bg-white'}`}>{cell}</td>
+                      ))}
                     </tr>
-                  </thead>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {(activeTab === 'HLOOKUP') && (
+              <div className="overflow-x-auto rounded-lg border border-slate-200 mb-6 shadow-sm">
+                <table className="w-full border-collapse text-sm text-center">
                   <tbody>
-                    {verticalData.map((row, rIdx) => (
+                    <tr className="bg-slate-100 text-slate-500">
+                      <th className="border border-slate-200 p-1 w-10 text-[10px] bg-slate-50"></th>
+                      {['A','B','C','D','E'].map(l => <th key={l} className="border border-slate-200 p-1 font-normal">{l}</th>)}
+                    </tr>
+                    {horizontalData.map((row, rIdx) => (
                       <tr key={rIdx}>
-                        <td className="border border-slate-200 p-1 text-center text-[10px] text-slate-400 bg-slate-50 font-bold">{rIdx + 1}</td>
+                        <td className="border border-slate-200 p-1 text-[10px] text-slate-400 bg-slate-50 font-bold">{rIdx + 10}</td>
                         {row.map((cell, cIdx) => (
-                          <td key={cIdx} className={`border border-slate-200 p-2 transition-all duration-300 ${highlightedCells.includes(`v-r${rIdx}-c${cIdx}`) ? 'bg-yellow-100 border-yellow-500 ring-2 ring-yellow-400 ring-inset font-bold text-yellow-900' : 'bg-white'} ${rIdx === 0 ? 'font-bold bg-slate-50/50 text-slate-600' : ''}`}>{cell}</td>
+                          <td key={cIdx} className={`border border-slate-200 p-2 ${highlightedCells.includes(`h-r${rIdx}-c${cIdx}`) ? 'bg-emerald-100 border-emerald-500 font-bold' : 'bg-white'}`}>{cell}</td>
                         ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-
-            {/* Hidden for simplicity unless needed */}
-            {(activeTab === 'HLOOKUP') && (
-               <div className="mb-6">
-               <p className="text-[10px] text-slate-500 mb-1 italic font-medium">Tabel Horizontal: Range A10:E11 (Record disusun menyamping).</p>
-               <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
-                 <table className="border-collapse text-sm min-w-full">
-                   <tbody>
-                     <tr className="bg-slate-100">
-                       <th className="border border-slate-200 p-1 w-10 text-[10px] text-slate-400 bg-slate-50"></th>
-                       {horizontalData[0].map((_, i) => (<th key={i} className="border border-slate-200 p-1 text-center font-normal text-slate-500 bg-slate-50">{colLetters[i]}</th>))}
-                     </tr>
-                     {horizontalData.map((row, rIdx) => (
-                       <tr key={rIdx}>
-                         <td className="border border-slate-200 p-1 text-center text-[10px] text-slate-400 bg-slate-50 font-bold">{rIdx + 10}</td>
-                         {row.map((cell, cIdx) => (
-                           <td key={cIdx} className={`border border-slate-200 p-2 min-w-[80px] transition-all duration-300 ${highlightedCells.includes(`h-r${rIdx}-c${cIdx}`) ? 'bg-emerald-100 border-emerald-500 ring-2 ring-emerald-400 ring-inset font-bold text-emerald-900' : 'bg-white'} ${rIdx === 0 ? 'font-bold bg-slate-50/50 text-slate-600' : ''}`}>{cell}</td>
-                         ))}
-                       </tr>
-                     ))}
-                   </tbody>
-                 </table>
-               </div>
-             </div>
             )}
 
-            {/* Tabel CHOOSE */}
-            {activeTab === 'CHOOSE' && (
-               <div className="mt-4">
-               <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                 <MousePointer2 className="w-3 h-3 text-purple-500" /> Data Lepas untuk CHOOSE (Baris 14)
-               </h2>
-               <div className="overflow-x-auto rounded-lg border border-slate-200">
-                 <table className="border-collapse text-sm min-w-full">
-                   <thead>
-                     <tr className="bg-slate-100">
-                       <th className="border border-slate-200 p-1 w-10 text-[10px] text-slate-400 bg-slate-50"></th>
-                       {chooseData[0].map((_, i) => (<th key={i} className="border border-slate-200 p-1 text-center font-normal text-slate-500 bg-slate-50">{colLetters[i]}</th>))}
-                     </tr>
-                   </thead>
-                   <tbody>
-                     <tr>
-                       <td className="border border-slate-200 p-1 text-center text-[10px] text-slate-400 bg-slate-50 font-bold">14</td>
-                       {chooseData[0].map((cell, cIdx) => (
-                         <td key={cIdx} className={`border border-slate-200 p-2 min-w-[100px] text-center transition-all duration-300 ${highlightedCells.includes(`c-r0-c${cIdx}`) ? 'bg-purple-100 border-purple-500 ring-2 ring-purple-400 ring-inset font-bold text-purple-900' : 'bg-white text-slate-400'}`}>{cell}</td>
-                       ))}
-                     </tr>
-                   </tbody>
-                 </table>
-               </div>
-             </div>
+            {(activeTab === 'CHOOSE') && (
+              <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-sm">
+                <table className="w-full border-collapse text-sm text-center">
+                  <tbody>
+                    <tr>
+                      <td className="border border-slate-200 p-1 w-10 text-[10px] text-slate-400 bg-slate-50 font-bold">14</td>
+                      {chooseData[0].map((cell, cIdx) => (
+                        <td key={cIdx} className={`border border-slate-200 p-2 ${highlightedCells.includes(`c-r0-c${cIdx}`) ? 'bg-purple-100 border-purple-500 font-bold text-purple-900 ring-2 ring-purple-400 ring-inset' : 'bg-white'}`}>{cell}</td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
-          {/* Bar Formula */}
-          <div className="bg-white rounded-xl shadow-md border-t-4 border-green-500 overflow-hidden">
-            <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center gap-2 overflow-x-auto">
-              <span className="italic font-serif text-slate-400 font-bold text-lg">fx</span>
-              <div className="h-6 w-[1px] bg-slate-300 mx-2 flex-shrink-0"></div>
-              <div className="font-mono text-sm text-slate-700 whitespace-nowrap py-1">
-                {activeTab === 'VLOOKUP' && `=VLOOKUP("${inputs.vlookupValue}"; A1:D5; ${inputs.vlookupCol}; ${inputs.vlookupRange})`}
-                {activeTab === 'HLOOKUP' && `=HLOOKUP("${inputs.hlookupValue}"; A10:E11; ${inputs.hlookupRow}; ${inputs.hlookupRange})`}
-                {activeTab === 'MATCH' && `=MATCH("${inputs.matchValue}"; ${inputs.matchArray}; ${inputs.matchType})`}
-                {activeTab === 'INDEX' && `=INDEX(A1:D5; ${inputs.indexRow}; ${inputs.indexCol})`}
-                {activeTab === 'CHOOSE' && `=CHOOSE(${inputs.chooseIndex}; A14; B14; C14)`}
-                {activeTab === 'COUNTIF' && `=COUNTIF(D2:D5; "${inputs.countifCriteria}")`}
-                {activeTab === 'SUMIF' && `=SUMIF(C2:C5; "${inputs.sumifCriteria}"; C2:C5)`}
-                {activeTab === 'COUNTIFS' && `=COUNTIFS(C2:C5; "${inputs.countifsCrit1}"; D2:D5; "${inputs.countifsCrit2}")`}
-                {activeTab === 'SUMIFS' && `=SUMIFS(D2:D5; C2:C5; "${inputs.sumifsCrit1}"; D2:D5; "${inputs.sumifsCrit2}")`}
-              </div>
-            </div>
-            <div className="p-8 flex flex-col items-center justify-center bg-green-50/20">
-               <span className="text-[10px] font-bold text-green-700 uppercase mb-2 tracking-widest">Hasil yang Tampil di Sel:</span>
-               <div className="text-4xl md:text-5xl font-mono font-black text-slate-900 drop-shadow-sm">{result}</div>
-            </div>
+          <div className="bg-white rounded-xl shadow-md border-t-4 border-green-500 overflow-hidden text-center">
+             <div className="bg-slate-900 px-4 py-3 flex items-center gap-3 overflow-x-auto border-b border-slate-800">
+               <span className="italic font-serif text-green-400 font-bold text-lg">fx</span>
+               <div className="font-mono text-sm text-slate-300 whitespace-nowrap text-left">
+                  {activeTab === 'VLOOKUP' && `=VLOOKUP("${inputs.vlookupValue}"; A1:D5; ${inputs.vlookupCol}; ${inputs.vlookupRange})`}
+                  {activeTab === 'HLOOKUP' && `=HLOOKUP("${inputs.hlookupValue}"; A10:E11; ${inputs.hlookupRow}; ${inputs.hlookupRange})`}
+                  {activeTab === 'MATCH' && `=MATCH("${inputs.matchValue}"; ${inputs.matchArray}; 0)`}
+                  {activeTab === 'INDEX' && `=INDEX(A1:D5; ${inputs.indexRow}; ${inputs.indexCol})`}
+                  {activeTab === 'CHOOSE' && `=CHOOSE(${inputs.chooseIndex}; A14; B14; C14)`}
+                  {activeTab === 'COUNTIF' && `=COUNTIF(D2:D5; "${inputs.countifCriteria}")`}
+                  {activeTab === 'SUMIF' && `=SUMIF(C2:C5; "${inputs.sumifCriteria}"; C2:C5)`}
+                  {activeTab === 'COUNTIFS' && `=COUNTIFS(C2:C5; "${inputs.countifsCrit1}"; D2:D5; "${inputs.countifsCrit2}")`}
+                  {activeTab === 'SUMIFS' && `=SUMIFS(D2:D5; C2:C5; "${inputs.sumifsCrit1}"; D2:D5; "${inputs.sumifsCrit2}")`}
+               </div>
+             </div>
+             <div className="p-10 bg-green-50/20">
+                <span className="text-[10px] font-bold text-green-700 uppercase tracking-widest block mb-2">Output Terkalkulasi</span>
+                <div className="text-6xl font-mono font-black text-slate-900 drop-shadow-sm">{result}</div>
+             </div>
           </div>
         </div>
 
-        {/* Panel Kontrol & Detail */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 sticky top-4 max-h-[85vh] overflow-y-auto custom-scrollbar">
-            <div className="flex gap-2 mb-8 flex-wrap">
-              {['VLOOKUP', 'HLOOKUP', 'MATCH', 'INDEX', 'CHOOSE', 'COUNTIF', 'SUMIF', 'COUNTIFS', 'SUMIFS'].map((tab) => (
-                <button 
-                  key={tab} 
-                  onClick={() => setActiveTab(tab)} 
-                  className={`px-3 py-1.5 rounded-full text-[9px] font-bold transition-all ${activeTab === tab ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-                >
-                  {tab}
-                </button>
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-4 overflow-y-auto max-h-[85vh] custom-scrollbar">
+            <div className="flex gap-1.5 mb-8 flex-wrap">
+              {tabs.map((tab) => (
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`px-2.5 py-1.5 rounded-full text-[9px] font-bold transition-all ${activeTab === tab ? 'bg-green-600 text-white shadow-md' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}>{tab}</button>
               ))}
             </div>
-
-            <h3 className="text-xs font-bold text-slate-400 uppercase mb-4 flex items-center gap-2 border-b border-slate-100 pb-2">
-              <Edit3 className="w-3 h-3"/> Argumen Formula (Input)
-            </h3>
-
+            
+            <h3 className="text-xs font-bold text-slate-400 uppercase mb-4 flex items-center gap-2 border-b border-slate-50 pb-2"><Edit3 size={14}/> Konfigurasi Argumen</h3>
+            
             <div className="space-y-6">
               {activeTab === 'VLOOKUP' && (
                 <>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">lookup_value (Nilai Kunci):</label>
-                    <div className="relative">
-                      <select value={inputs.vlookupValue} onChange={(e) => setInputs({...inputs, vlookupValue: e.target.value})} className="w-full p-2 bg-blue-50 border border-blue-200 rounded-md text-sm font-bold text-blue-800 appearance-none focus:ring-2 ring-green-500 outline-none">
-                        {verticalData.slice(1).map(r => <option key={r[0]} value={r[0]}>{r[0]}</option>)}
-                      </select>
-                      <ChevronDown className="absolute right-2 top-2.5 w-4 h-4 text-blue-400 pointer-events-none" />
-                    </div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">lookup_value:</label>
+                    <select value={inputs.vlookupValue} onChange={(e) => setInputs({...inputs, vlookupValue: e.target.value})} className="w-full p-2 bg-blue-50 border border-blue-200 rounded-md text-sm font-bold appearance-none">
+                      {verticalData.slice(1).map(r => <option key={r[0]} value={r[0]}>{r[0]}</option>)}
+                    </select>
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Data yang ingin dicari di kolom pertama tabel (ID).</p>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">col_index_num (Kolom Ke-):</label>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">col_index_num:</label>
                     <input type="number" value={inputs.vlookupCol} onChange={(e) => setInputs({...inputs, vlookupCol: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm font-mono focus:ring-2 ring-green-500 outline-none" />
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Nomor urut kolom data yang ingin diambil (1 s.d 4).</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">range_lookup:</label>
+                    <select value={inputs.vlookupRange} onChange={(e) => setInputs({...inputs, vlookupRange: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold uppercase">
+                      <option value="FALSE">FALSE (Pasti)</option>
+                      <option value="TRUE">TRUE (Mendekati)</option>
+                    </select>
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Gunakan FALSE untuk mencari data yang identik.</p>
                   </div>
                 </>
               )}
-
+              {activeTab === 'HLOOKUP' && (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">lookup_value:</label>
+                    <select value={inputs.hlookupValue} onChange={(e) => setInputs({...inputs, hlookupValue: e.target.value})} className="w-full p-2 bg-emerald-50 border border-emerald-200 rounded-md text-sm font-bold">
+                      {horizontalData[0].slice(1).map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Data yang dicari di baris pertama tabel horizontal (Bulan).</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">row_index_num:</label>
+                    <input type="number" value={inputs.hlookupRow} onChange={(e) => setInputs({...inputs, hlookupRow: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm font-mono focus:ring-2 ring-green-500 outline-none" />
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Nomor urut baris hasil yang ingin diambil (1 atau 2).</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">range_lookup:</label>
+                    <select value={inputs.hlookupRange} onChange={(e) => setInputs({...inputs, hlookupRange: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold uppercase">
+                      <option value="FALSE">FALSE (Pasti)</option>
+                      <option value="TRUE">TRUE (Mendekati)</option>
+                    </select>
+                  </div>
+                </>
+              )}
+              {activeTab === 'MATCH' && (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">lookup_array:</label>
+                    <select value={inputs.matchArray} onChange={(e) => setInputs({...inputs, matchArray: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm font-bold">
+                      <option value="A1:A5">A1:A5 (Kolom ID)</option>
+                      <option value="B1:B5">B1:B5 (Kolom Menu)</option>
+                      <option value="C1:C5">C1:C5 (Kolom Harga)</option>
+                    </select>
+                    <p className="text-[9px] text-blue-600 mt-1 italic font-semibold leading-tight">Rentang sel atau daftar tempat komputer akan mencari data.</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">lookup_value:</label>
+                    <select value={inputs.matchValue} onChange={(e) => setInputs({...inputs, matchValue: e.target.value})} className="w-full p-2 bg-amber-50 border border-amber-200 rounded-md text-sm font-bold appearance-none">
+                      {getMatchOptions().map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Data yang ingin diketahui nomor urut barisnya.</p>
+                  </div>
+                </>
+              )}
+              {activeTab === 'INDEX' && (
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">row_num:</label>
+                    <input type="number" value={inputs.indexRow} onChange={(e) => setInputs({...inputs, indexRow: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-mono focus:ring-2 ring-green-500 outline-none" />
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Nomor koordinat baris dalam tabel (1 s.d 5).</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">column_num:</label>
+                    <input type="number" value={inputs.indexCol} onChange={(e) => setInputs({...inputs, indexCol: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm font-mono focus:ring-2 ring-green-500 outline-none" />
+                    <p className="text-[9px] text-slate-400 mt-1 italic">Nomor koordinat kolom dalam tabel (1 s.d 4).</p>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'CHOOSE' && (
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">index_num:</label>
+                  <input type="number" value={inputs.chooseIndex} onChange={(e) => setInputs({...inputs, chooseIndex: e.target.value})} className="w-full p-2 bg-purple-50 border border-purple-200 rounded-md text-sm font-bold" />
+                  <p className="text-[9px] text-slate-400 mt-1 italic">Pilih nomor urut data (1-3) dari baris 14.</p>
+                </div>
+              )}
               {activeTab === 'COUNTIF' && (
-                <>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Rentang (Kolom Stok D2:D5):</label>
-                    <input type="text" disabled value="D2:D5" className="w-full p-2 bg-slate-100 border border-slate-200 rounded-md text-sm font-mono" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Kriteria:</label>
-                    <select value={inputs.countifCriteria} onChange={(e) => setInputs({...inputs, countifCriteria: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
-                      <option value=">10">Ada lebih dari 10 Stok (&gt;10)</option>
-                      <option value="<15">Kurang dari 15 Stok (&lt;15)</option>
-                      <option value=">=15">Minimal 15 Stok (&gt;=15)</option>
-                    </select>
-                  </div>
-                </>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Criteria Stok (D2:D5):</label>
+                  <select value={inputs.countifCriteria} onChange={(e) => setInputs({...inputs, countifCriteria: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold">
+                    <option value=">10">Stok &gt; 10</option>
+                    <option value="<15">Stok &lt; 15</option>
+                    <option value=">=15">Stok &gt;= 15</option>
+                  </select>
+                  <p className="text-[9px] text-slate-400 mt-1 italic">Syarat pencarian untuk menghitung sel yang sesuai.</p>
+                </div>
               )}
-
               {activeTab === 'SUMIF' && (
-                <>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Rentang Cek (Kolom Harga):</label>
-                    <input type="text" disabled value="C2:C5" className="w-full p-2 bg-slate-100 border border-slate-200 rounded-md text-sm font-mono" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Kriteria:</label>
-                    <select value={inputs.sumifCriteria} onChange={(e) => setInputs({...inputs, sumifCriteria: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
-                      <option value=">10000">Harga di atas 10rb (&gt;10000)</option>
-                      <option value="<=12000">Harga maks 12rb (&lt;=12000)</option>
-                    </select>
-                  </div>
-                  <p className="text-[9px] text-slate-400 italic">Keterangan: Menjumlahkan harga yang memenuhi kriteria.</p>
-                </>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Criteria Harga (C2:C5):</label>
+                  <select value={inputs.sumifCriteria} onChange={(e) => setInputs({...inputs, sumifCriteria: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold">
+                    <option value=">10000">Harga &gt; 10000</option>
+                    <option value="<=12000">Harga &lt;= 12000</option>
+                  </select>
+                  <p className="text-[9px] text-slate-400 mt-1 italic">Syarat untuk menjumlahkan nilai sel yang sesuai.</p>
+                </div>
               )}
-
               {activeTab === 'COUNTIFS' && (
-                <>
+                <div className="space-y-4 text-left">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Kriteria 1 (Harga):</label>
-                    <select value={inputs.countifsCrit1} onChange={(e) => setInputs({...inputs, countifsCrit1: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
-                      <option value=">5000">Harga &gt; 5000</option>
-                      <option value=">12000">Harga &gt; 12000</option>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Kriteria 1 (Harga):</label>
+                    <select value={inputs.countifsCrit1} onChange={(e) => setInputs({...inputs, countifsCrit1: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold">
+                      <option value=">5000">Harga &gt; 5rb</option>
+                      <option value=">12000">Harga &gt; 12rb</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">DAN Kriteria 2 (Stok):</label>
-                    <select value={inputs.countifsCrit2} onChange={(e) => setInputs({...inputs, countifsCrit2: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Kriteria 2 (Stok):</label>
+                    <select value={inputs.countifsCrit2} onChange={(e) => setInputs({...inputs, countifsCrit2: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold">
                       <option value="<15">Stok &lt; 15</option>
                       <option value=">10">Stok &gt; 10</option>
                     </select>
                   </div>
-                </>
+                  <p className="text-[9px] text-slate-400 mt-1 italic">Menghitung hanya jika kriteria 1 DAN 2 terpenuhi.</p>
+                </div>
               )}
-
               {activeTab === 'SUMIFS' && (
-                <>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Rentang Jumlah (Stok):</label>
-                    <input type="text" disabled value="D2:D5" className="w-full p-2 bg-slate-100 border border-slate-200 rounded-md text-sm font-mono" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Kriteria 1 (Harga):</label>
-                    <select value={inputs.sumifsCrit1} onChange={(e) => setInputs({...inputs, sumifsCrit1: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
+                <div className="space-y-4 text-left">
+                   <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Syarat 1 (Harga):</label>
+                    <select value={inputs.sumifsCrit1} onChange={(e) => setInputs({...inputs, sumifsCrit1: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold">
                       <option value=">10000">Harga &gt; 10rb</option>
                       <option value=">5000">Harga &gt; 5rb</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Kriteria 2 (Stok):</label>
-                    <select value={inputs.sumifsCrit2} onChange={(e) => setInputs({...inputs, sumifsCrit2: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm">
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Syarat 2 (Stok):</label>
+                    <select value={inputs.sumifsCrit2} onChange={(e) => setInputs({...inputs, sumifsCrit2: e.target.value})} className="w-full p-2 bg-slate-50 border rounded-md text-sm font-bold">
                       <option value="<15">Stok &lt; 15</option>
                       <option value=">5">Stok &gt; 5</option>
                     </select>
                   </div>
-                  <p className="text-[9px] text-slate-400 italic">Keterangan: Menjumlahkan Stok yang menunya mahal DAN stoknya sedikit.</p>
-                </>
-              )}
-
-              {/* Simplified existing ones to save space */}
-              {activeTab === 'INDEX' && (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Baris:</label>
-                    <input type="number" value={inputs.indexRow} onChange={(e) => setInputs({...inputs, indexRow: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm font-mono" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Kolom:</label>
-                    <input type="number" value={inputs.indexCol} onChange={(e) => setInputs({...inputs, indexCol: e.target.value})} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-md text-sm font-mono" />
-                  </div>
+                  <p className="text-[9px] text-slate-400 mt-1 italic leading-tight">Menjumlahkan Stok jika kriteria harga dan stok tercapai.</p>
                 </div>
               )}
-
-              {activeTab === 'MATCH' && (
-                <>
-                  <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-tighter">Data Dicari:</label>
-                  <div className="relative">
-                    <select value={inputs.matchValue} onChange={(e) => setInputs({...inputs, matchValue: e.target.value})} className="w-full p-2 bg-amber-50 border border-amber-200 rounded-md text-sm font-bold appearance-none">
-                      {getMatchOptions().map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-2 top-2.5 w-4 h-4 text-amber-400 pointer-events-none" />
-                  </div>
-                </>
-              )}
             </div>
-
-            {/* Kotak Analisis Informatika */}
-            <div className="mt-8 pt-6 border-t border-slate-100">
-               <div className="bg-slate-900 p-5 rounded-xl border-l-4 border-yellow-400 shadow-lg">
-                 <h4 className="text-white text-[11px] font-bold mb-2 flex items-center gap-2">
-                   <Lightbulb className="w-3 h-3 text-yellow-400" /> Analisis Computational Thinking
-                 </h4>
-                 <div className="space-y-3 text-[10px] text-slate-300 leading-relaxed">
-                    <p><span className="text-yellow-400 font-bold uppercase">Algoritma:</span> Langkah sistematis komputer mencari data: Mulai dari baris/kolom pertama → Cek kesesuaian → Berikan hasil.</p>
-                    <p><span className="text-yellow-400 font-bold uppercase">Logika Matematika:</span> SUMIF dan COUNTIF menggunakan operator perbandingan (&gt;, &lt;, =) untuk memproses data secara otomatis berdasarkan kondisi.</p>
-                    <p><span className="text-yellow-400 font-bold uppercase">Dekomposisi:</span> Memecah masalah (misal: "Berapa total stok barang mahal?") menjadi rentang kriteria, kriteria itu sendiri, dan rentang jumlah.</p>
-                 </div>
-               </div>
-               
-               <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                  <h4 className="text-blue-700 text-[10px] font-bold mb-1 uppercase tracking-tighter">Tantangan Praktikum:</h4>
-                  <p className="text-[10px] text-blue-600 leading-relaxed">{getFormulaInfo().desc}</p>
-               </div>
+            
+            <div className="mt-8 p-4 bg-slate-900 rounded-xl border-l-4 border-yellow-400 shadow-lg">
+               <h4 className="text-white text-[10px] font-bold mb-2 flex items-center gap-2 uppercase tracking-widest leading-none"><Lightbulb size={12} className="text-yellow-400" /> Analisis Computational Thinking</h4>
+               <p className="text-[10px] text-slate-400 leading-relaxed italic">"Dekomposisi memandu kita memecah kriteria kompleks menjadi variabel yang dapat diproses oleh sistem."</p>
             </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+// ============================================================
+// MODUL 2: CODING MAZE (ROBOT LOGIC - 10 LEVELS COMPLETE)
+// ============================================================
+const CodingLab = () => {
+  const levels = [
+    { id: 1, name: "Garis Lurus", maze: [[0,0,0,0,0], [0,0,0,0,0], [1,1,1,1,1], [0,0,0,0,0], [0,0,0,0,0]], start: { x: 0, y: 2, dir: 0 }, target: { x: 4, y: 2 }, hint: "Bantu robot maju. Gunakan 'Ulangi sampai' agar efisien!" },
+    { id: 2, name: "Belokan Pertama", maze: [[0,0,0,0,0], [0,0,1,1,1], [0,0,1,0,0], [1,1,1,0,0], [0,0,0,0,0]], start: { x: 0, y: 3, dir: 0 }, target: { x: 4, y: 1 }, hint: "Belokkan robot sebelum menabrak dinding!" },
+    { id: 3, name: "Tangga Logika", maze: [[0,0,0,1,1], [0,0,1,1,0], [0,1,1,0,0], [1,1,0,0,0], [0,0,0,0,0]], start: { x: 0, y: 3, dir: 0 }, target: { x: 4, y: 0 }, hint: "Ada pola tangga. Gunakan perulangan!" },
+    { id: 4, name: "Sensor Dasar", maze: [[0,0,1,1,1], [0,0,1,0,0], [1,1,1,0,0], [0,0,0,0,0], [0,0,0,0,0]], start: { x: 0, y: 2, dir: 0 }, target: { x: 4, y: 0 }, hint: "Pakai blok 'Jika ada jalan' untuk mendeteksi belokan." },
+    { id: 5, name: "Labirin U", maze: [[1,1,1,1,1], [1,0,0,0,1], [1,0,1,0,1], [1,0,1,0,1], [1,1,1,0,0]], start: { x: 2, y: 2, dir: 3 }, target: { x: 0, y: 4 }, hint: "Kombinasikan Jika dan Belok!" },
+    { id: 6, name: "Zig-Zag Menengah", maze: [[1,1,0,0,0], [0,1,1,0,0], [0,0,1,1,0], [0,0,0,1,1], [0,0,0,0,1]], start: { x: 0, y: 0, dir: 1 }, target: { x: 4, y: 4 }, hint: "Gunakan logika If di dalam Repeat." },
+    { id: 7, name: "Persimpangan T", maze: [[1,1,1,1,1], [0,0,1,0,0], [0,0,1,0,0], [0,0,1,0,0], [0,0,1,0,0]], start: { x: 2, y: 4, dir: 3 }, target: { x: 0, y: 0 }, hint: "Kapan robot harus berhenti maju dan mulai belok?" },
+    { id: 8, name: "Algoritma Efisien", maze: [[1,0,0,0,0], [1,1,1,1,1], [0,0,0,0,1], [1,1,1,1,1], [1,0,0,0,0]], start: { x: 0, y: 4, dir: 3 }, target: { x: 0, y: 0 }, hint: "Gunakan 'Jika... lainnya' untuk jalur buntu." },
+    { id: 9, name: "Pencarian Jejak", maze: [[1,1,1,0,0], [1,0,1,0,0], [1,1,1,1,1], [0,0,1,0,1], [0,0,1,1,1]], start: { x: 4, y: 4, dir: 2 }, target: { x: 0, y: 0 }, hint: "Hati-hati, jalur ini cukup menjebak!" },
+    { id: 10, name: "The Grand Master", maze: [[1,1,1,1,1], [1,0,0,0,1], [1,1,1,1,1], [0,0,0,0,1], [1,1,1,1,1]], start: { x: 0, y: 4, dir: 0 }, target: { x: 0, y: 0 }, hint: "Level terakhir! Gabungkan Repeat, If, and Else." }
+  ];
+
+  const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
+  const currentLevel = levels[currentLevelIdx];
+  const [robotPos, setRobotPos] = useState(currentLevel.start);
+  const [program, setProgram] = useState([]);
+  const [isRunning, setIsRunning] = useState(false);
+  const [currentStep, setCurrentStep] = useState(-1);
+  const [status, setStatus] = useState('idle'); 
+  const [message, setMessage] = useState(currentLevel.hint);
+  const [score, setScore] = useState(0);
+
+  const availableBlocks = [
+    { id: 'move', label: 'gerak maju', icon: <ArrowUp size={20} />, color: 'from-blue-500 to-blue-700' },
+    { id: 'turnLeft', label: 'belok kiri ↺', icon: <RotateLeft size={20} />, color: 'from-blue-500 to-blue-700' },
+    { id: 'turnRight', label: 'belok kanan ↻', icon: <RotateCw size={20} />, color: 'from-blue-500 to-blue-700' },
+    { id: 'repeatUntil', label: 'ulangi sampai 🏁', icon: <Repeat size={20} />, color: 'from-pink-500 to-rose-700' },
+    { id: 'ifPathAhead', label: 'jika ada jalan di depan', icon: <Split size={20} />, color: 'from-yellow-500 to-orange-600' },
+    { id: 'ifElsePath', label: 'jika jalan... lainnya...', icon: <GitBranch size={20} />, color: 'from-green-500 to-emerald-600' },
+  ];
+
+  useEffect(() => { setRobotPos(currentLevel.start); setProgram([]); setStatus('idle'); setMessage(currentLevel.hint); }, [currentLevelIdx]);
+
+  const addBlock = (blockId) => { if (isRunning) return; const block = availableBlocks.find(b => b.id === blockId); setProgram([...program, { ...block, instanceId: Date.now() }]); };
+  const removeBlock = (idx) => { if (isRunning) return; const newP = [...program]; newP.splice(idx,1); setProgram(newP); };
+
+  const runProgram = async () => {
+    if (program.length === 0 || isRunning) return;
+    setIsRunning(true); setStatus('running');
+    let currentRobot = { ...currentLevel.start };
+    const hasLoop = program.some(b => b.id === 'repeatUntil');
+    let iterations = 0;
+    while (iterations < 80) {
+      iterations++;
+      for (let i = 0; i < program.length; i++) {
+        if (program[i].id === 'repeatUntil') continue;
+        setCurrentStep(i); const block = program[i];
+        if (block.id === 'ifElsePath') { if (!checkPath(currentRobot, currentRobot.dir)) { i += 1; continue; } }
+        if (block.id === 'ifPathAhead') { if (!checkPath(currentRobot, currentRobot.dir)) { i++; continue; } }
+        await new Promise(r => setTimeout(r, 400));
+        let nextX = currentRobot.x; let nextY = currentRobot.y;
+        if (block.id === 'move') {
+          if (currentRobot.dir === 0) nextX++; else if (currentRobot.dir === 1) nextY++; else if (currentRobot.dir === 2) nextX--; else if (currentRobot.dir === 3) nextY--;
+          if (nextX < 0 || nextX >= 5 || nextY < 0 || nextY >= 5 || currentLevel.maze[nextY][nextX] === 0) {
+            setStatus('crash'); setMessage("Robot menabrak tembok!"); setIsRunning(false); return;
+          }
+          currentRobot.x = nextX; currentRobot.y = nextY;
+        } else if (block.id === 'turnRight') currentRobot.dir = (currentRobot.dir + 1) % 4;
+        else if (block.id === 'turnLeft') currentRobot.dir = (currentRobot.dir + 3) % 4;
+        setRobotPos({ ...currentRobot });
+        if (currentRobot.x === currentLevel.target.x && currentRobot.y === currentLevel.target.y) {
+          setStatus('success'); setScore(prev => prev + 100); setMessage("Misi Berhasil!"); setIsRunning(false); return;
+        }
+      }
+      if (!hasLoop) break;
+    }
+    setIsRunning(false);
+  };
+
+  return (
+    <div className="flex flex-col h-screen w-full bg-[#05070a] font-sans text-slate-300 overflow-hidden relative select-none">
+      {/* HEADER CODING DENGAN TINGGI LEBIH (h-24) */}
+      <header className="h-24 bg-[#0f1219] border-b border-white/10 px-4 md:px-6 flex justify-between items-center z-50 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-900/20">
+            <Bot size={28} className="text-white" />
+          </div>
+          <div className="text-left leading-none">
+            <h1 className="text-sm md:text-xl font-bold text-white uppercase tracking-tighter">Coding Maze Hub</h1>
+            <p className="text-[10px] text-blue-400 font-bold uppercase mt-1">LEVEL {currentLevelIdx + 1} OF 10 &bull; {currentLevel.name}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-black/40 px-4 py-2 rounded-xl border border-blue-500/30 text-white font-mono text-sm md:text-lg shadow-inner">
+             <span className="opacity-50 text-[10px] mr-2">PROGRESS:</span>
+             {score} PTS
+          </div>
+          {status === 'success' && currentLevelIdx < levels.length - 1 && (
+            <button onClick={() => setCurrentLevelIdx(prev => prev + 1)} className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-emerald-500 shadow-lg animate-bounce transition-all">Next Misi</button>
+          )}
+        </div>
+      </header>
+
+      {/* MAIN CONTENT AREA DENGAN SCROLL MANDIRI UNTUK HP */}
+      <main className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden p-3 md:p-4 gap-4 custom-scrollbar">
+        {/* GAME BOARD SECTION */}
+        <section className="flex-none lg:flex-1 bg-[#0f1219]/60 backdrop-blur-md rounded-3xl border border-white/5 flex flex-col items-center justify-center p-6 min-h-[450px] shadow-2xl relative overflow-hidden">
+           <div className="absolute top-4 left-6 opacity-20 hidden md:flex items-center gap-2"><Zap size={14} className="text-blue-400" /><span className="text-[10px] font-bold uppercase tracking-[0.2em]">Visual Engine v3.2</span></div>
+           
+           {/* MATRIX CONTAINER DENGAN WRAPPER AGAR TETAP DALAM FRAME */}
+           <div className="w-full max-w-[340px] aspect-square relative z-10 border-4 border-white/5 rounded-[2.5rem] p-1 bg-white/5 shadow-2xl">
+             <div className="grid grid-cols-5 grid-rows-5 gap-1.5 bg-slate-900/90 p-3.5 rounded-[2.2rem] w-full h-full">
+                {currentLevel.maze.map((row, y) => row.map((cell, x) => (
+                  <div key={`${x}-${y}`} className={`flex items-center justify-center rounded-xl aspect-square relative transition-all duration-300 ${cell === 1 ? 'bg-slate-100 shadow-[inset_0_-4px_0_#cbd5e1]' : 'bg-slate-800/40 border border-white/5 shadow-inner'}`}>
+                    {x === currentLevel.target.x && y === currentLevel.target.y && <Target size={22} className="text-rose-500 animate-pulse drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]" strokeWidth={3} />}
+                    {robotPos.x === x && robotPos.y === y && <div className="text-3xl md:text-4xl transition-all duration-300 transform" style={{ transform: `rotate(${robotPos.dir * 90}deg)` }}>🤖</div>}
+                  </div>
+                )))}
+             </div>
+           </div>
+           
+           {/* TOMBOL JALANKAN FULL WIDTH DI BAWAH MATRIX */}
+           <div className="mt-8 flex gap-3 w-full max-w-[340px] relative z-10">
+             <button onClick={runProgram} disabled={isRunning || program.length === 0} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest active:scale-95 shadow-xl border-b-4 border-blue-800 active:border-b-0 disabled:opacity-30 disabled:border-0 transition-all flex items-center justify-center gap-3 group">
+                <Play size={18} fill="white" className="group-hover:scale-110 transition-transform"/> JALANKAN PROGRAM
+             </button>
+             <button onClick={() => setRobotPos(currentLevel.start)} className="bg-slate-800 p-4 rounded-2xl text-slate-400 hover:text-white hover:bg-slate-700 transition-all shadow-lg"><RotateCcw size={22} /></button>
+           </div>
+
+           <div className={`mt-5 px-6 py-2.5 rounded-full border text-[10px] uppercase font-black tracking-[0.2em] transition-all duration-500 ${status === 'crash' ? 'bg-rose-500/10 border-rose-500/30 text-rose-500 animate-shake' : status === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-slate-800/40 border-white/10 text-blue-400 opacity-60'}`}>
+              {message}
+           </div>
+        </section>
+
+        {/* WORKSPACE SECTION */}
+        <section className="flex-none lg:w-96 flex flex-col gap-3 h-auto overflow-hidden">
+          <div className="flex-1 bg-[#0f1219]/60 backdrop-blur-md rounded-3xl border border-white/5 p-5 overflow-y-auto custom-scrollbar text-left shadow-inner shadow-black/40">
+             <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
+                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><Code2 size={16} className="text-blue-500"/> Algoritma Saya</h3>
+                <button onClick={() => setProgram([])} className="text-[10px] text-rose-500 font-black hover:text-rose-400 tracking-tighter uppercase transition-colors">Hapus Semua</button>
+             </div>
+             <div className="space-y-2.5">
+                {program.map((b, i) => (
+                  <div key={i} className={`flex items-center justify-between p-4 bg-gradient-to-r ${b.color} text-white rounded-2xl text-xs font-bold shadow-lg animate-in slide-in-from-left duration-200 border-l-4 border-black/20 group`}>
+                    <span className="flex items-center gap-3"><span className="opacity-40 font-mono text-[10px] bg-black/20 px-1.5 py-0.5 rounded uppercase">Step {i+1}</span>{b.icon} {b.label}</span>
+                    <button onClick={() => removeBlock(i)} className="p-1 hover:bg-black/20 rounded-lg transition-colors"><X size={14} className="opacity-50 group-hover:opacity-100"/></button>
+                  </div>
+                ))}
+                {program.length === 0 && <div className="h-40 flex flex-col items-center justify-center opacity-10 text-white"><Bot size={50}/><p className="text-[10px] uppercase font-black mt-3 tracking-widest text-center leading-relaxed">Belum ada instruksi.<br/>Klik tombol di bawah.</p></div>}
+             </div>
+          </div>
+          
+          <div className="bg-[#0f1219]/30 rounded-3xl border border-white/5 p-4 flex flex-wrap gap-2 justify-center shadow-inner">
+             {availableBlocks.map(b => (
+               <button key={b.id} onClick={() => addBlock(b.id)} className={`bg-gradient-to-br ${b.color} text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase active:scale-90 shadow-md hover:brightness-110 transition-all tracking-tighter border-b-2 border-black/20`}>{b.label}</button>
+             ))}
+          </div>
+        </section>
+      </main>
+
+      {/* FOOTER PANDUAN (LEBIH KECIL & ADA GERAK MAJU) */}
+      <footer className="bg-[#0f1219] h-24 border-t border-white/5 p-2 overflow-x-auto shrink-0 custom-scrollbar">
+          <div className="flex gap-2 min-w-max h-full items-center px-2">
+              <div className="p-2.5 bg-blue-600/10 border border-blue-500/20 rounded-xl w-44 text-left flex flex-col justify-center shadow-inner">
+                  <span className="text-[9px] font-black text-blue-400 uppercase flex items-center gap-2 mb-1 leading-none"><ArrowUp size={10}/> Gerak Maju</span>
+                  <p className="text-[8px] text-slate-500 leading-tight">Robot melangkah satu kotak ke arah depan.</p>
+              </div>
+              <div className="p-2.5 bg-indigo-600/10 border border-indigo-500/20 rounded-xl w-44 text-left flex flex-col justify-center shadow-inner">
+                  <span className="text-[9px] font-black text-indigo-400 uppercase flex items-center gap-2 mb-1 leading-none"><RotateCw size={10}/> Turn (Belok)</span>
+                  <p className="text-[8px] text-slate-500 leading-tight">Robot berputar 90° tetap di kotak yang sama.</p>
+              </div>
+              <div className="p-2.5 bg-pink-600/10 border border-pink-500/20 rounded-xl w-44 text-left flex flex-col justify-center shadow-inner">
+                  <span className="text-[9px] font-black text-pink-400 uppercase flex items-center gap-2 mb-1 leading-none"><Repeat size={10}/> Repeat (Loop)</span>
+                  <p className="text-[8px] text-slate-500 leading-tight">Instruksi akan diulang terus sampai target tercapai.</p>
+              </div>
+              <div className="p-2.5 bg-yellow-600/10 border border-yellow-500/20 rounded-xl w-44 text-left flex flex-col justify-center shadow-inner">
+                  <span className="text-[9px] font-black text-yellow-400 uppercase flex items-center gap-2 mb-1 leading-none"><Split size={10}/> IF (Sensor)</span>
+                  <p className="text-[8px] text-slate-500 leading-tight">Mengecek kondisi jalan sebelum melakukan aksi.</p>
+              </div>
+          </div>
+      </footer>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; } 
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        .animate-shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+      ` }} />
+    </div>
+  );
+};
+
+// ============================================================
+// DASHBOARD UTAMA (HUB - TAMPILAN STANDAR)
+// ============================================================
+export default function App() {
+  const [activeApp, setActiveApp] = useState('home');
+
+  const renderContent = () => {
+    switch(activeApp) {
+      case 'spreadsheet': return (
+        <div className="fixed inset-0 z-[100] bg-white overflow-hidden animate-in fade-in duration-300">
+          <button onClick={() => setActiveApp('home')} className="absolute top-4 right-4 z-[110] bg-slate-900 text-white p-2.5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group shadow-2xl">
+            <Home size={18} /><span className="text-xs font-black uppercase hidden group-hover:block pr-1">Kembali</span>
+          </button>
+          <SpreadsheetLab />
+        </div>
+      );
+      case 'coding': return (
+        <div className="fixed inset-0 z-[100] bg-[#05070a] overflow-hidden animate-in fade-in duration-300">
+          <button onClick={() => setActiveApp('home')} className="absolute top-4 right-4 z-[110] bg-blue-600 text-white p-2.5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group shadow-2xl border border-white/10">
+            <Home size={18} /><span className="text-xs font-black uppercase hidden group-hover:block pr-1">Kembali</span>
+          </button>
+          <div className="h-full w-full">
+            <CodingLab />
+          </div>
+        </div>
+      );
+      default: return (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-[#f8fafc] animate-in zoom-in duration-500 overflow-y-auto">
+          <div className="max-w-4xl w-full text-center">
+            {/* HUB HEADER TINGGI */}
+            <div className="mb-12">
+                <div className="bg-indigo-600 w-24 h-24 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-2xl ring-4 ring-indigo-50 shadow-indigo-200">
+                    <LayoutGrid className="text-white w-12 h-12" />
+                </div>
+                <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight uppercase">Portal Lab Informatika</h1>
+                <p className="text-base text-slate-500 max-w-lg mx-auto font-normal leading-relaxed">
+                    Pilih laboratorium virtual yang ingin Anda jelajahi untuk memulai sesi belajar interaktif.
+                </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
+              <button onClick={() => setActiveApp('spreadsheet')} className="group p-8 bg-white border border-slate-200 rounded-[2.5rem] hover:border-green-500 hover:shadow-2xl transition-all flex flex-col gap-6 shadow-sm border-b-4 hover:border-b-green-600">
+                <div className="p-5 bg-green-100 rounded-2xl text-green-600 group-hover:bg-green-600 group-hover:text-white transition-all w-fit shadow-inner">
+                  <Table size={32}/>
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-slate-900 mb-1 uppercase tracking-tight">Makmal Spreadsheet Pro</h3>
+                  <p className="text-sm text-slate-500 font-normal leading-relaxed">Pahami logika VLOOKUP, HLOOKUP, dan fungsi statistik secara visual dan mendalam.</p>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-green-600 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Masuk Lab <ArrowRight size={14}/></div>
+              </button>
+
+              <button onClick={() => setActiveApp('coding')} className="group p-8 bg-white border border-slate-200 rounded-[2.5rem] hover:border-blue-500 hover:shadow-2xl transition-all flex flex-col gap-6 shadow-sm border-b-4 hover:border-b-blue-600">
+                <div className="p-5 bg-blue-100 rounded-2xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all w-fit shadow-inner">
+                  <Bot size={32}/>
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl text-slate-900 mb-1 uppercase tracking-tight">Coding Robot Maze</h3>
+                  <p className="text-sm text-slate-500 font-normal leading-relaxed">Selesaikan tantangan 10 misi robot cerdas menggunakan logika blok pemrograman.</p>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Jalankan Misi <ArrowRight size={14}/></div>
+              </button>
+            </div>
+
+            <footer className="mt-20 border-t border-slate-100 pt-8 opacity-40">
+               <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest italic tracking-tighter">SMP Virtual Informatics Hub &bull; Versi 3.2 Stable Build</span>
+            </footer>
+          </div>
+        </div>
+      );
+    }
+  };
+
+  return (
+    <div className="h-screen w-screen bg-[#f8fafc] overflow-hidden select-none font-sans">
+      {renderContent()}
     </div>
   );
 }
