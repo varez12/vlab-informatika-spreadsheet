@@ -9,7 +9,9 @@ import {
     Underline,
     Info,
     CheckCircle,
-    FileText
+    FileText,
+    Minimize,
+    Layout
 } from 'lucide-react';
 
 const WordParagraph = () => {
@@ -17,6 +19,9 @@ const WordParagraph = () => {
     const [isBold, setIsBold] = useState(false);
     const [isItalic, setIsItalic] = useState(false);
     const [isUnderline, setIsUnderline] = useState(false);
+
+    // Zoom State
+    const [zoom, setZoom] = useState(100);
 
     const [activeTab, setActiveTab] = useState('Home');
     const [toast, setToast] = useState(null);
@@ -138,63 +143,97 @@ const WordParagraph = () => {
             </div>
 
             {/* DOCUMENT AREA */}
-            <div className="bg-[#a0a0a0] p-4 md:p-8 flex justify-center flex-1 overflow-y-auto">
-                {/* 3cm margin approx 113px, using custom padding */}
+            <div className="bg-[#a0a0a0] p-4 md:p-8 flex justify-center flex-1 overflow-y-auto custom-scrollbar">
+                {/* Scale wrapper */}
                 <div
-                    className="bg-white w-full max-w-[800px] shadow-2xl min-h-[1000px] font-serif leading-relaxed animate-in fade-in duration-500 origin-top"
-                    style={{ padding: '3cm' }}
+                    className="origin-top transition-transform duration-200 ease-out py-8"
+                    style={{ transform: `scale(${zoom / 100})` }}
                 >
-
-                    <h1 className="text-xl font-bold mb-6 text-center text-slate-900 uppercase">Laporan Kegiatan Sekolah</h1>
-
                     <div
-                        className={`space-y-4 text-sm text-slate-900 transition-all duration-300 
+                        className="bg-white w-full max-w-[800px] shadow-2xl min-h-[1000px] font-serif leading-relaxed animate-in fade-in duration-500"
+                        style={{ padding: '3cm' }}
+                    >
+
+                        <h1 className="text-xl font-bold mb-6 text-center text-slate-900 uppercase">Laporan Kegiatan Sekolah</h1>
+
+                        <div
+                            className={`space-y-4 text-sm text-slate-900 transition-all duration-300 
                             ${alignment} 
                             ${isBold ? 'font-bold' : ''} 
                             ${isItalic ? 'italic' : ''} 
                             ${isUnderline ? 'underline underline-offset-4' : ''}
                         `}
-                    >
+                        >
 
-                        <p>
-                            Pada hari Senin tanggal 15 Januari 2024, SD Negeri 1 Suka Belajar telah melaksanakan kegiatan "Pekan Literasi Digital". Kegiatan ini bertujuan untuk mengenalkan dasar-dasar teknologi informasi kepada siswa sejak dini, termasuk penggunaan perangkat lunak pengolah kata seperti Microsoft Word.
-                        </p>
+                            <p>
+                                Pada hari Senin tanggal 15 Januari 2024, SD Negeri 1 Suka Belajar telah melaksanakan kegiatan "Pekan Literasi Digital". Kegiatan ini bertujuan untuk mengenalkan dasar-dasar teknologi informasi kepada siswa sejak dini, termasuk penggunaan perangkat lunak pengolah kata seperti Microsoft Word.
+                            </p>
 
-                        <p>
-                            Seluruh siswa kelas 6 mengikuti pelatihan simulasi tata letak dokumen. Mereka belajar bagaimana mengatur perataan teks agar dokumen terlihat rapi dan profesional. Perataan kiri (Align Left) biasanya digunakan untuk surat resmi standar. Perataan tengah (Center) digunakan untuk judul. Perataan kanan (Align Right) sering dipakai untuk tanggal atau tanda tangan di pojok kanan bawah.
-                        </p>
+                            <p>
+                                Seluruh siswa kelas 6 mengikuti pelatihan simulasi tata letak dokumen. Mereka belajar bagaimana mengatur perataan teks agar dokumen terlihat rapi dan profesional. Perataan kiri (Align Left) biasanya digunakan untuk surat resmi standar. Perataan tengah (Center) digunakan untuk judul. Perataan kanan (Align Right) sering dipakai untuk tanggal atau tanda tangan di pojok kanan bawah.
+                            </p>
 
-                        <p>
-                            Sedangkan perataan Justify (Rata Kanan-Kiri) adalah format yang paling sering digunakan dalam buku atau laporan formal karena memberikan kesan blok teks yang rapi dan teratur di kedua sisi margin. Kemampuan mengatur paragraf ini sangat penting sebagai fondasi keterampilan administrasi digital mereka di masa depan.
-                        </p>
+                            <p>
+                                Sedangkan perataan Justify (Rata Kanan-Kiri) adalah format yang paling sering digunakan dalam buku atau laporan formal karena memberikan kesan blok teks yang rapi dan teratur di kedua sisi margin. Kemampuan mengatur paragraf ini sangat penting sebagai fondasi keterampilan administrasi digital mereka di masa depan.
+                            </p>
 
-                        <p>
-                            Kegiatan diakhiri dengan praktik langsung di laboratorium komputer sekolah. Para siswa sangat antusias mencoba berbagai fitur ribbon layouting. Diharapkan program ini dapat mencetak generasi yang tidak hanya mahir menggunakan gadget, tetapi juga produktif dalam menggunakan alat-alat perkantoran digital.
-                        </p>
+                            <p>
+                                Kegiatan diakhiri dengan praktik langsung di laboratorium komputer sekolah. Para siswa sangat antusias mencoba berbagai fitur ribbon layouting. Diharapkan program ini dapat mencetak generasi yang tidak hanya mahir menggunakan gadget, tetapi juga produktif dalam menggunakan alat-alat perkantoran digital.
+                            </p>
+
+                        </div>
+
+                        <div className="mt-12 pt-8 border-t border-slate-100 flex justify-between items-end text-[10px] text-slate-500 italic">
+                            <span>Dokumen Simulasi V-Lab</span>
+                            <span>Halaman 1 dari 1</span>
+                        </div>
 
                     </div>
-
-                    <div className="mt-12 pt-8 border-t border-slate-100 flex justify-between items-end text-[10px] text-slate-500 italic">
-                        <span>Dokumen Simulasi V-Lab</span>
-                        <span>Halaman 1 dari 1</span>
-                    </div>
-
                 </div>
             </div>
 
             {/* FOOTER */}
-            <footer className="bg-indigo-700 text-white px-6 py-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] shrink-0 border-t border-indigo-600">
-                <div className="flex gap-8">
-                    <span className="flex items-center gap-2 font-mono">Page 1 of 1</span>
-                    <span className="flex items-center gap-2 font-mono">Margin: 3cm</span>
-                    <span className="flex items-center gap-2 font-mono">Size: 11pt</span>
+            {/* FOOTER STATUS BAR */}
+            <footer className="bg-[#f3f3f3] text-regal-blue px-2 py-1 flex items-center justify-between text-[11px] font-sans border-t border-[#d6d6d6] shrink-0 select-none text-slate-600">
+                <div className="flex gap-4 px-2">
+                    <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default"><FileText size={12} className="text-blue-600" /> Page 1 of 1</span>
+                    <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default decoration-dotted underline decorate-slate-400">Word Count: 142</span>
+                    <span className="hidden md:flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default">English (US)</span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className={`p-0.5 rounded ${isBold ? 'bg-white/20' : ''}`}><Bold size={10} /></div>
-                    <div className={`p-0.5 rounded ${isItalic ? 'bg-white/20' : ''}`}><Italic size={10} /></div>
-                    <div className={`p-0.5 rounded ${isUnderline ? 'bg-white/20' : ''}`}><Underline size={10} /></div>
-                    <div className="w-px h-3 bg-white/20"></div>
-                    <span>Global Simulation Mode</span>
+
+                <div className="flex items-center gap-4 px-4">
+                    {/* View Modes */}
+                    <div className="hidden md:flex gap-1 mr-4 border-r border-slate-300 pr-4">
+                        <button className="p-1 hover:bg-[#c6c6c6] rounded bg-[#d6d6d6] active:bg-slate-400 transition-colors" title="Print Layout"><Layout size={14} /></button>
+                        <button className="p-1 hover:bg-[#c6c6c6] rounded transition-colors" title="Web Layout"><Minimize size={14} /></button>
+                    </div>
+
+                    {/* Zoom Controls */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setZoom(z => Math.max(z - 10, 50))}
+                            className="text-slate-500 hover:bg-[#d0d0d0] rounded px-2 font-bold transition-all active:scale-95"
+                        >-</button>
+
+                        <div className="flex items-center gap-2 w-32 group">
+                            <input
+                                type="range"
+                                min="50"
+                                max="200"
+                                value={zoom}
+                                onChange={(e) => setZoom(parseInt(e.target.value))}
+                                className="w-full h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-slate-600 group-hover:accent-blue-600 transition-all"
+                            />
+                            <div className="w-[1px] h-3 bg-slate-400"></div>
+                        </div>
+
+                        <button
+                            onClick={() => setZoom(z => Math.min(z + 10, 200))}
+                            className="text-slate-500 hover:bg-[#d0d0d0] rounded px-2 font-bold transition-all active:scale-95"
+                        >+</button>
+
+                        <span className="w-10 text-right font-mono text-xs">{zoom}%</span>
+                    </div>
                 </div>
             </footer>
 
@@ -203,3 +242,4 @@ const WordParagraph = () => {
 };
 
 export default WordParagraph;
+

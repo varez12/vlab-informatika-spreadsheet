@@ -22,6 +22,9 @@ const WordPageLayout = () => {
     const [customMargins, setCustomMargins] = useState({ top: 2.54, bottom: 2.54, left: 2.54, right: 2.54 });
     const [showPageSetup, setShowPageSetup] = useState(false);
 
+    // Zoom State
+    const [zoom, setZoom] = useState(100);
+
     const [activeTab, setActiveTab] = useState('Layout'); // Default to Layout tab
     const [toast, setToast] = useState(null);
 
@@ -309,10 +312,10 @@ const WordPageLayout = () => {
             </div>
 
             {/* DOCUMENT AREA */}
-            <div className="bg-[#525659] p-4 md:p-8 flex justify-center flex-1 overflow-auto relative">
+            <div className="bg-[#525659] p-4 md:p-8 flex justify-center flex-1 overflow-auto relative custom-scrollbar">
 
                 {/* Scale wrapper to fit view if paper is huge */}
-                <div className="origin-top scale-[0.6] md:scale-[0.8] lg:scale-[0.85] transition-transform">
+                <div className="origin-top transition-transform duration-200 ease-out py-8" style={{ transform: `scale(${zoom / 100})` }}>
                     <div
                         className="bg-white shadow-[0_0_50px_rgba(0,0,0,0.5)] font-serif text-xs md:text-sm leading-relaxed text-justify text-slate-900 border border-slate-300 relative"
                         style={getPageStyle()}
@@ -353,23 +356,47 @@ const WordPageLayout = () => {
             </div>
 
             {/* FOOTER */}
-            <footer className="bg-indigo-700 text-white px-6 py-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] shrink-0 border-t border-indigo-600">
-                <div className="flex gap-8">
-                    <span className="flex items-center gap-2 font-mono">Page 1 of 1</span>
-                    <span className="flex items-center gap-2 font-mono">{pageSize.toUpperCase()}</span>
-                    <span className="flex items-center gap-2 font-mono">{orientation}</span>
-                    <span className="flex items-center gap-2 font-mono">
-                        Margin: {marginType === 'custom'
-                            ? `T:${customMargins.top} B:${customMargins.bottom} L:${customMargins.left} R:${customMargins.right}`
-                            : marginType.toUpperCase()}
-                    </span>
+            {/* FOOTER STATUS BAR */}
+            <footer className="bg-[#f3f3f3] text-regal-blue px-2 py-1 flex items-center justify-between text-[11px] font-sans border-t border-[#d6d6d6] shrink-0 select-none text-slate-600">
+                <div className="flex gap-4 px-2">
+                    <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default"><FileText size={12} className="text-blue-600" /> Page 1 of 1</span>
+                    <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default decoration-dotted underline decorate-slate-400">126 words</span>
+                    <span className="hidden md:flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default lowercase">{pageSize}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Maximize size={10} className="opacity-50" />
-                    <div className="w-20 h-1 bg-indigo-900 rounded-full overflow-hidden">
-                        <div className="w-3/4 h-full bg-white/50"></div>
+
+                <div className="flex items-center gap-4 px-4">
+                    {/* View Modes (Visual only for now) */}
+                    <div className="hidden md:flex gap-1 mr-4 border-r border-slate-300 pr-4">
+                        <button className="p-1 hover:bg-[#c6c6c6] rounded bg-[#d6d6d6] active:bg-slate-400 transition-colors" title="Print Layout"><Layout size={14} /></button>
+                        <button className="p-1 hover:bg-[#c6c6c6] rounded transition-colors" title="Web Layout"><Minimize size={14} /></button>
                     </div>
-                    <span>85%</span>
+
+                    {/* Zoom Controls */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setZoom(z => Math.max(z - 10, 50))}
+                            className="text-slate-500 hover:bg-[#d0d0d0] rounded px-2 font-bold transition-all active:scale-95"
+                        >-</button>
+
+                        <div className="flex items-center gap-2 w-32 group">
+                            <input
+                                type="range"
+                                min="50"
+                                max="200"
+                                value={zoom}
+                                onChange={(e) => setZoom(parseInt(e.target.value))}
+                                className="w-full h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-slate-600 group-hover:accent-blue-600 transition-all"
+                            />
+                            <div className="w-[1px] h-3 bg-slate-400"></div>
+                        </div>
+
+                        <button
+                            onClick={() => setZoom(z => Math.min(z + 10, 200))}
+                            className="text-slate-500 hover:bg-[#d0d0d0] rounded px-2 font-bold transition-all active:scale-95"
+                        >+</button>
+
+                        <span className="w-10 text-right font-mono text-xs">{zoom}%</span>
+                    </div>
                 </div>
             </footer>
 

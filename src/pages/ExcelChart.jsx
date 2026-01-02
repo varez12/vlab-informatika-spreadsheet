@@ -10,7 +10,9 @@ import {
     Grid,
     TrendingUp,
     MousePointer2,
-    Info
+    Info,
+    Layout,
+    Minimize
 } from 'lucide-react';
 
 const ExcelChart = () => {
@@ -42,6 +44,9 @@ const ExcelChart = () => {
     const [chartData, setChartData] = useState([]);
     const [chartType, setChartType] = useState(null); // null, 'column', 'pie'
     const [step, setStep] = useState(1); // 1: Input/Select, 2: Insert Tab, 3: Choose Chart, 4: Done
+
+    // Zoom State
+    const [zoom, setZoom] = useState(100);
 
     const [toast, setToast] = useState(null);
     const showMessage = (msg) => {
@@ -244,7 +249,7 @@ const ExcelChart = () => {
             </div>
 
             {/* WORKSPACE - SPLIT */}
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden transition-transform duration-200 origin-top-left" style={{ transform: `scale(${zoom / 100})`, width: `${100 * (100 / zoom)}%`, height: `${100 * (100 / zoom)}%` }}>
 
                 {/* LEFT: GRID (SPREADSHEET) */}
                 <div className="w-1/2 bg-white flex flex-col border-r border-slate-300 text-sm overflow-auto">
@@ -332,11 +337,46 @@ const ExcelChart = () => {
 
             </div>
 
-            {/* FOOTER */}
-            <div className="bg-green-700 h-6 w-full flex items-center px-4 text-[10px] text-white font-mono justify-between z-30">
-                <div className="flex gap-4">
-                    <span>READY</span>
-                    {selection[0] && <span>Selection: {selection[0]}:{selection[1]}</span>}
+            {/* FOOTER STATUS BAR */}
+            <div className="bg-[#f3f3f3] text-regal-blue px-2 py-1 flex items-center justify-between text-[11px] font-sans border-t border-[#d6d6d6] shrink-0 select-none text-slate-600 z-50 relative">
+                <div className="flex gap-4 px-2">
+                    <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default font-bold text-green-700">READY</span>
+                    {selection[0] && <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default">Selection: {selection[0]}:{selection[1]}</span>}
+                </div>
+
+                <div className="flex items-center gap-4 px-4">
+                    {/* View Modes */}
+                    <div className="hidden md:flex gap-1 mr-4 border-r border-slate-300 pr-4">
+                        <button className="p-1 hover:bg-[#c6c6c6] rounded bg-[#d6d6d6] active:bg-slate-400 transition-colors" title="Normal"><Layout size={14} /></button>
+                        <button className="p-1 hover:bg-[#c6c6c6] rounded transition-colors" title="Page Break Preview"><Minimize size={14} /></button>
+                    </div>
+
+                    {/* Zoom Controls */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setZoom(z => Math.max(z - 10, 50))}
+                            className="text-slate-500 hover:bg-[#d0d0d0] rounded px-2 font-bold transition-all active:scale-95"
+                        >-</button>
+
+                        <div className="flex items-center gap-2 w-32 group">
+                            <input
+                                type="range"
+                                min="50"
+                                max="200"
+                                value={zoom}
+                                onChange={(e) => setZoom(parseInt(e.target.value))}
+                                className="w-full h-1 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-slate-600 group-hover:accent-green-600 transition-all"
+                            />
+                            <div className="w-[1px] h-3 bg-slate-400"></div>
+                        </div>
+
+                        <button
+                            onClick={() => setZoom(z => Math.min(z + 10, 200))}
+                            className="text-slate-500 hover:bg-[#d0d0d0] rounded px-2 font-bold transition-all active:scale-95"
+                        >+</button>
+
+                        <span className="w-10 text-right font-mono text-xs">{zoom}%</span>
+                    </div>
                 </div>
             </div>
         </div>
