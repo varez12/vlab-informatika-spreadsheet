@@ -9,6 +9,8 @@ import WordPageLayout from './pages/WordPageLayout';
 import WordTabulator from './pages/WordTabulator'; // Fixed Import
 import Blockly from './pages/Blockly';
 import ExcelChart from "./pages/ExcelChart"; // Import new page
+import Hardware from './pages/Hardware';
+import ExcelSort from './pages/ExcelSort';
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/excel" element={<Excel />} />
         <Route path="/excel-chart" element={<ExcelChart />} /> {/* New Route */}
+        <Route path="/hardware" element={<Hardware />} />
+        <Route path="/excel-sort" element={<ExcelSort />} />
         <Route path="/game" element={<Blockly />} />
         <Route path="/mailmerge" element={<MailMerger />} />
         <Route path="/word-paragraph" element={<WordParagraph />} />

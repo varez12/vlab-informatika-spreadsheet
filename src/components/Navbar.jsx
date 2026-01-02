@@ -31,7 +31,7 @@ function Navbar() {
                     ]
                 },
                 {
-                    label: 'Advanced Functions', path: '#',
+                    label: 'Formula Peringkasan', path: '#',
                     nestedItems: [
                         { label: 'SUMIF', path: '/excel?tab=SUMIF' },
                         { label: 'SUMIFS', path: '/excel?tab=SUMIFS' },
@@ -40,6 +40,7 @@ function Navbar() {
                     ]
                 },
                 { label: 'Visualisasi Data (Grafik)', path: '/excel-chart' },
+                { label: 'Sort & Filter', path: '/excel-sort' },
             ]
         },
         {
@@ -52,6 +53,7 @@ function Navbar() {
             ]
         },
         { path: '/game', label: 'Game Lab', icon: <Gamepad2 size={18} /> },
+        { path: '/hardware', label: 'Hardware 3D', icon: <Monitor size={18} /> },
     ];
 
     return (
