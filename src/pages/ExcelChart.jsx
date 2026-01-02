@@ -206,8 +206,8 @@ const ExcelChart = () => {
             </div>
 
             {/* --- MAIN SPREADSHEET AREA --- */}
-            <main className="flex flex-col relative bg-[#E6E6E6]">
-                <div className="relative custom-scrollbar">
+            <main className="flex flex-col relative bg-[#E6E6E6] flex-1 overflow-hidden">
+                <div className="relative custom-scrollbar overflow-auto">
 
                     {/* Zoomable Container */}
                     <div
@@ -217,8 +217,8 @@ const ExcelChart = () => {
                         <table className="w-full border-collapse bg-white table-fixed">
                             <colgroup>
                                 <col className="w-10 bg-[#F8F9FA] border-r border-slate-300" /> {/* Row Numbers */}
-                                <col className="w-48" /> {/* A - Kategori */}
-                                <col className="w-32" /> {/* B - Nilai */}
+                                <col className="w-24" /> {/* A - Kategori */}
+                                <col className="w-20" /> {/* B - Nilai */}
                                 <col style={{ width: '200px' }} className="border-r border-slate-300" /> {/* C */}
                                 <col style={{ width: '200px' }} className="border-r border-slate-300" /> {/* D */}
                                 <col className="w-full" /> {/* Remaining */}
@@ -411,7 +411,7 @@ const ExcelChart = () => {
 
                         {/* Instruction Bubble (If no chart yet) */}
                         {!chartType && !isDataSelected && (
-                            <div className="absolute top-10 left-[400px] bg-yellow-50 border border-yellow-200 p-4 rounded shadow-md z-40 max-w-xs animate-bounce cursor-pointer" onClick={() => setIsDataSelected(true)}>
+                            <div className="absolute top-10 left-[220px] bg-yellow-50 border border-yellow-200 p-4 rounded shadow-md z-40 max-w-xs animate-bounce cursor-pointer" onClick={() => setIsDataSelected(true)}>
                                 <div className="flex gap-3 items-start">
                                     <div className="bg-yellow-100 p-2 rounded-full text-yellow-600"><MousePointer2 size={18} /></div>
                                     <div>
@@ -426,8 +426,8 @@ const ExcelChart = () => {
                 </div>
 
                 {/* --- STATUS BAR (Header Style) --- */}
-                <div className="bg-[#217346] text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-50 shadow-sm border-t border-[#1e6b41] mb-4">
-                    <div className="flex items-center gap-4">
+                <div className="bg-[#217346] text-white text-[10px] px-4 py-1.5 flex items-center justify-between z-50 shadow-sm border-t border-[#1e6b41] overflow-hidden">
+                    <div className="flex items-center gap-4 shrink-0">
                         <div className="font-bold uppercase tracking-wider">READY</div>
                         <div className="flex items-center gap-1 opacity-80 hover:opacity-100 cursor-pointer">
                             <FileSpreadsheet size={10} />

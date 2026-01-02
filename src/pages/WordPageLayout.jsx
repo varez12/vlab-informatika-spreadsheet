@@ -184,11 +184,11 @@ const WordPageLayout = () => {
                 </div>
 
                 {/* Ribbon Content */}
-                <div className="p-2 flex items-center gap-2 bg-[#f3f3f3] min-h-[100px] border-b border-slate-200 overflow-x-auto">
+                <div className="p-2 flex flex-wrap items-start gap-4 bg-[#f3f3f3] min-h-[100px] border-b border-slate-200 overflow-x-auto">
                     {activeTab === 'Layout' ? (
                         <>
                             {/* Page Setup Group */}
-                            <div className="flex items-start h-full px-4 border-r border-slate-300 gap-6">
+                            <div className="flex flex-wrap items-start h-full px-2 md:px-4 md:border-r border-slate-300 gap-4 md:gap-6">
 
                                 {/* Margins */}
                                 <div className="flex flex-col items-center gap-1 group">
@@ -264,29 +264,20 @@ const WordPageLayout = () => {
 
                                 {/* Size */}
                                 <div className="flex flex-col items-center gap-1">
-                                    <div className="grid grid-cols-3 gap-1">
+                                    <div className="flex flex-wrap gap-1 justify-center max-w-[120px]">
                                         <SimTooltip content="A4 (21 x 29.7 cm): Standar internasional untuk dokumen resmi.">
                                             <button
                                                 onClick={() => handleSize('a4', 'A4')}
-                                                className={`px-2 py-1 rounded hover:bg-slate-200 border text-[10px] font-bold ${pageSize === 'a4' ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
+                                                className={`px-3 py-1.5 rounded hover:bg-slate-200 border text-[10px] font-bold whitespace-nowrap ${pageSize === 'a4' ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
                                             >
                                                 A4
-                                            </button>
-                                        </SimTooltip>
-
-                                        <SimTooltip content="Letter (21.6 x 27.9 cm): Standar kertas di Amerika, sedikit lebih pendek dari A4.">
-                                            <button
-                                                onClick={() => handleSize('letter', 'Letter')}
-                                                className={`px-2 py-1 rounded hover:bg-slate-200 border text-[10px] font-bold ${pageSize === 'letter' ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
-                                            >
-                                                Letter
                                             </button>
                                         </SimTooltip>
 
                                         <SimTooltip content="Legal (21.6 x 35.6 cm): Kertas panjang untuk dokumen hukum. Hati-hati beda dengan F4!">
                                             <button
                                                 onClick={() => handleSize('legal', 'Legal')}
-                                                className={`px-2 py-1 rounded hover:bg-slate-200 border text-[10px] font-bold ${pageSize === 'legal' ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
+                                                className={`px-3 py-1.5 rounded hover:bg-slate-200 border text-[10px] font-bold whitespace-nowrap ${pageSize === 'legal' ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'border-slate-200 bg-white text-slate-600'}`}
                                             >
                                                 Legal
                                             </button>
@@ -312,7 +303,7 @@ const WordPageLayout = () => {
             </div>
 
             {/* DOCUMENT AREA */}
-            <div className="bg-[#525659] p-4 md:p-8 flex justify-center flex-1 overflow-auto relative custom-scrollbar">
+            <div className="bg-[#e5e7eb] p-4 md:p-8 flex justify-center flex-1 overflow-auto relative custom-scrollbar">
 
                 {/* Scale wrapper to fit view if paper is huge */}
                 <div className="origin-top transition-transform duration-200 ease-out py-8" style={{ transform: `scale(${zoom / 100})` }}>

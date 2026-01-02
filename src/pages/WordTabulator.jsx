@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     CornerDownLeft,
     Trash2,
@@ -7,29 +7,50 @@ import {
     MousePointer2,
     Minimize,
     Maximize,
-    Scaling
+    Scaling,
+    Info,
+    X
 } from 'lucide-react';
 
 const WordTabulator = () => {
     // State
     const [activeTabType, setActiveTabType] = useState('left'); // 'left' | 'center' | 'right'
     const [tabStops, setTabStops] = useState([
-        { id: 1, pos: 3, type: 'left' },
-        { id: 2, pos: 10, type: 'center' }
+        { id: 1, pos: 1.5, type: 'left' },    // Left tab di 1.5cm untuk data
+        { id: 2, pos: 3, type: 'center' },    // Center tab di 3cm untuk tanda tangan kiri
+        { id: 3, pos: 7, type: 'center' }     // Center tab di 7cm untuk tanda tangan kanan
     ]);
     const [lines, setLines] = useState([
         "Nama\t: Budi Santoso",
         "Kelas\t: VI (Enam)",
-        "Hobi\t: Coding React"
+        "Alamat\t: Jl. Merdeka No. 10",
+        "",
+        "",
+        "\t\tMengetahui,\tMenyetujui,",
+        "\t\tKepala Sekolah\tWali Kelas",
+        "",
+        "",
+        "\t\tAhmad Yani, M.Pd\tSiti Rahayu, S.Pd"
     ]);
     const [activeLineIndex, setActiveLineIndex] = useState(0);
     const [activeTab, setActiveTab] = useState('Home');
     const [cursorPosition, setCursorPosition] = useState(0);
     const [toast, setToast] = useState(null);
 
+    // Refs for Scroll Sync
+    const docContainerRef = useRef(null);
+    const verticalRulerRef = useRef(null);
+
+    // Sync Vertical Ruler Scroll with Document
+    const handleDocScroll = () => {
+        if (docContainerRef.current && verticalRulerRef.current) {
+            verticalRulerRef.current.scrollTop = docContainerRef.current.scrollTop;
+        }
+    };
+
     // Constants
     const CM_TO_PX = 37.8; // ~96 DPI / 2.54
-    const MARGIN_LEFT_CM = 2.54;
+    const MARGIN_LEFT_CM = 1; // Reduced for mobile
     const MARGIN_LEFT_PX = MARGIN_LEFT_CM * CM_TO_PX;
     const DOC_WIDTH_PX = 794; // A4 width
 
@@ -51,18 +72,19 @@ const WordTabulator = () => {
         const rect = e.currentTarget.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
 
-        // Calculate pos relative to Margin
-        const rawPosCm = (clickX - MARGIN_LEFT_PX) / CM_TO_PX;
-        const posCm = Math.round(rawPosCm * 2) / 2; // snap 0.5
+        // Calculate pos in cm (ruler active area starts at 0, not at margin)
+        const rawPosCm = clickX / CM_TO_PX;
+        const posCm = Math.round(rawPosCm * 2) / 2; // snap to 0.5cm
 
-        if (posCm < 0) return; // Ignore margin clicks
+        if (posCm < 0) return; // Ignore invalid clicks
 
-        // Check if removing
-        const existing = tabStops.find(t => Math.abs(t.pos - posCm) < 0.25);
+        // Check if removing existing tab stop (within 0.5cm tolerance)
+        const existing = tabStops.find(t => Math.abs(t.pos - posCm) < 0.5);
         if (existing) {
             setTabStops(tabStops.filter(t => t.id !== existing.id));
             showMessage("🗑️ Tab Stop Dihapus");
         } else {
+            // Add new tab stop
             const newTab = {
                 id: Date.now(),
                 pos: posCm,
@@ -131,9 +153,9 @@ const WordTabulator = () => {
 
     // Icons
     const TabIconSVG = ({ type }) => {
-        if (type === 'left') return <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,0 2,10 10,10" fill="none" stroke="black" strokeWidth="2" /></svg>;
-        if (type === 'center') return <svg width="12" height="12" viewBox="0 0 12 12"><line x1="6" y1="0" x2="6" y2="10" stroke="#000" strokeWidth="2" /><line x1="2" y1="10" x2="10" y2="10" stroke="#000" strokeWidth="2" /></svg>;
-        if (type === 'right') return <svg width="12" height="12" viewBox="0 0 12 12"><polyline points="10,0 10,10 2,10" fill="none" stroke="black" strokeWidth="2" /></svg>;
+        if (type === 'left') return <svg width="8" height="8" viewBox="0 0 12 12"><polyline points="2,0 2,10 10,10" fill="none" stroke="black" strokeWidth="2" /></svg>;
+        if (type === 'center') return <svg width="8" height="8" viewBox="0 0 12 12"><line x1="6" y1="0" x2="6" y2="10" stroke="#000" strokeWidth="2" /><line x1="2" y1="10" x2="10" y2="10" stroke="#000" strokeWidth="2" /></svg>;
+        if (type === 'right') return <svg width="8" height="8" viewBox="0 0 12 12"><polyline points="10,0 10,10 2,10" fill="none" stroke="black" strokeWidth="2" /></svg>;
         return null;
     }
 
@@ -147,30 +169,54 @@ const WordTabulator = () => {
 
         let charCount = 0; // Track cumulative length
 
+        // Default tab spacing in cm (smaller for mobile compatibility)
+        const DEFAULT_TAB_SPACING = 1.5;
+
+        // Sort tab stops by position
+        const sortedTabs = [...tabStops].sort((a, b) => a.pos - b.pos);
+
         return (
             <div className="relative h-[24px] w-full flex items-center group font-serif text-[15px]">
                 {/* Visual Segments */}
                 {segments.map((seg, i) => {
-                    let style = {};
+                    let leftPos = 0;
+                    let transform = 'none';
+
                     if (i === 0) {
-                        style = { left: 0, textAlign: 'left' };
+                        // First segment always starts at 0
+                        leftPos = 0;
                     } else {
-                        const tabStop = tabStops[i - 1];
-                        if (tabStop) {
-                            let transform = 'none';
+                        // For segments after the first, find corresponding tab stop
+                        // i=1 uses sortedTabs[0], i=2 uses sortedTabs[1], etc.
+                        const tabIndex = i - 1;
+
+                        if (tabIndex < sortedTabs.length) {
+                            // There's a tab stop available for this segment
+                            const tabStop = sortedTabs[tabIndex];
+                            leftPos = tabStop.pos * CM_TO_PX;
                             if (tabStop.type === 'center') transform = 'translateX(-50%)';
                             if (tabStop.type === 'right') transform = 'translateX(-100%)';
-
-                            style = {
-                                left: `${(tabStop.pos) * CM_TO_PX}px`,
-                                position: 'absolute',
-                                transform,
-                                whiteSpace: 'nowrap'
-                            };
                         } else {
-                            style = { left: `${(i * 1.25) * CM_TO_PX}px`, position: 'absolute' };
+                            // No more tab stops - use default spacing
+                            // Calculate position based on last tab stop or default
+                            if (sortedTabs.length > 0) {
+                                // Continue from last tab stop position
+                                const lastTabPos = sortedTabs[sortedTabs.length - 1].pos;
+                                const extraSegments = tabIndex - sortedTabs.length + 1;
+                                leftPos = (lastTabPos + extraSegments * DEFAULT_TAB_SPACING) * CM_TO_PX;
+                            } else {
+                                // No tab stops at all - pure default spacing
+                                leftPos = i * DEFAULT_TAB_SPACING * CM_TO_PX;
+                            }
                         }
                     }
+
+                    const style = {
+                        left: `${leftPos}px`,
+                        position: 'absolute',
+                        transform,
+                        whiteSpace: 'nowrap'
+                    };
 
                     // Cursor Logic
                     const start = charCount;
@@ -270,27 +316,9 @@ const WordTabulator = () => {
                 <div className="p-2 flex items-center gap-2 bg-[#f3f3f3] min-h-[90px] border-b border-slate-200">
                     {activeTab === 'Home' ? (
                         <>
-                            {/* Tabulator Tools Group */}
-                            <div className="flex flex-col items-center px-6 border-r border-slate-300 gap-1">
-                                <div className="flex gap-4">
-                                    <button
-                                        onClick={cycleTabType}
-                                        className="w-12 h-10 border border-slate-300 bg-white rounded flex flex-col items-center justify-center hover:bg-slate-50 transition-colors shadow-sm"
-                                        title="Ubah Tipe Tab (Klik)"
-                                    >
-                                        <div className="scale-150 mb-1"><TabIconSVG type={activeTabType} /></div>
-                                        <span className="text-[9px] text-slate-500 uppercase font-bold">{activeTabType}</span>
-                                    </button>
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-600 mt-0.5">Tab Selector</span>
-                            </div>
 
-                            {/* Instructions Group */}
-                            <div className="flex flex-col justify-center px-4 text-xs text-slate-600 space-y-1">
-                                <p className="flex items-center gap-2"><MousePointer2 size={14} className="text-indigo-600" /> <b>Klik Ruler</b> untuk tambah tab.</p>
-                                <p className="flex items-center gap-2"><MoveHorizontal size={14} className="text-indigo-600" /> Tekan <b>TAB</b> untuk loncat.</p>
-                                <p className="flex items-center gap-2"><Trash2 size={14} className="text-red-500" /> <b>Klik Icon Tab</b> di ruler untuk hapus.</p>
-                            </div>
+
+
                         </>
                     ) : (
                         <div className="flex-1 flex items-center justify-center text-slate-400 italic text-xs">
@@ -300,108 +328,191 @@ const WordTabulator = () => {
                 </div>
             </div>
 
-            {/* DOCUMENT AREA with ATTACHED RULER */}
-            <div className="bg-[#a0a0a0] p-4 md:p-8 flex justify-center flex-1 overflow-auto">
-                <div
-                    className="bg-white shadow-2xl relative flex flex-col"
-                    style={{ width: `${DOC_WIDTH_PX}px`, minHeight: '1000px' }}
-                >
-
-                    {/* RULER BAR (Sticky at top of paper) */}
-                    <div className="h-[30px] bg-slate-100 border-b border-slate-300 relative select-none w-full shrink-0">
-                        {/* Ruler Container matching Margins */}
-
-                        {/* Margin Zone Gray (Left) */}
-                        <div className="absolute top-0 bottom-0 left-0 bg-slate-300 z-10 border-r border-slate-400" style={{ width: `${MARGIN_LEFT_PX}px` }}>
-                            {/* Tab Select Indicator overlay */}
-                            <div
-                                className="absolute top-0 left-0 w-full h-full flex items-center justify-center cursor-pointer hover:bg-slate-200"
-                                onClick={cycleTabType}
-                                title="Ganti Tipe Tab"
-                            >
-                                <div className="scale-125 opacity-50"><TabIconSVG type={activeTabType} /></div>
-                            </div>
-                        </div>
-
-                        {/* Margin Zone Gray (Right) */}
-                        <div className="absolute top-0 bottom-0 right-0 bg-slate-300 z-10 border-l border-slate-400" style={{ width: `${MARGIN_LEFT_PX}px` }}></div>
-
-                        {/* Active Ruler Area */}
-                        <div
-                            className="absolute top-0 bottom-0 left-0 right-0 cursor-crosshair overflow-hidden"
-                            onClick={handleRulerClick}
-                        >
-                            {/* Ticks */}
-                            {Array.from({ length: 30 }).map((_, i) => {
-                                const posCm = i * 0.5;
-                                const isCm = i % 2 === 0;
-                                const leftPx = MARGIN_LEFT_PX + (posCm * CM_TO_PX);
-                                return (
-                                    <div
-                                        key={i}
-                                        className={`absolute bottom-0 border-l border-slate-500 ${isCm ? 'h-3' : 'h-1.5'}`}
-                                        style={{ left: `${leftPx}px` }}
-                                    >
-                                        {isCm && (
-                                            <span className="absolute -top-3 -left-1 text-[9px] text-slate-600 font-sans">{posCm}</span>
-                                        )}
-                                    </div>
-                                );
-                            })}
-
-                            {/* User Tab Stops */}
-                            {tabStops.map(tab => (
-                                <div
-                                    key={tab.id}
-                                    className="absolute bottom-0 w-4 h-4 -ml-2 z-20 hover:scale-125 transition-transform flex items-end justify-center cursor-pointer"
-                                    style={{ left: `${MARGIN_LEFT_PX + (tab.pos * CM_TO_PX)}px` }}
-                                    title="Klik untuk hapus"
-                                >
-                                    <TabIconSVG type={tab.type} />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* EDITABLE CONTENT */}
+            {/* MAIN CONTENT: Vertical Ruler + Document Area */}
+            <div className="flex flex-1 overflow-hidden">
+                {/* VERTICAL RULER (Fixed at far left) */}
+                <div className="w-[20px] bg-[#f0f0f0] border-r border-slate-300 relative select-none shrink-0 overflow-hidden">
+                    {/* Tab Selector Corner Box at top */}
                     <div
-                        className="flex-1 font-serif text-[15px] leading-relaxed relative"
-                        style={{
-                            paddingTop: `${MARGIN_LEFT_PX / 2}px`, // Top margin
-                            paddingLeft: `${MARGIN_LEFT_PX}px`,
-                            paddingRight: `${MARGIN_LEFT_PX}px`,
-                            paddingBottom: '96px'
-                        }}
+                        className="absolute top-0 left-0 right-0 h-[24px] bg-[#f0f0f0] border-b border-slate-300 flex items-center justify-center cursor-pointer hover:bg-[#e0e0e0] transition-colors z-10"
+                        onClick={cycleTabType}
+                        title={`Tipe Tab: ${activeTabType.toUpperCase()} (Klik untuk ganti)`}
                     >
-                        {/* Guide Line for Left Margin (Optional) */}
-                        <div className="absolute top-0 bottom-0 border-l border-dashed border-slate-200 pointer-events-none" style={{ left: `${MARGIN_LEFT_PX}px` }}></div>
-
-                        {lines.map((line, idx) => (
-                            <div key={idx}>
-                                {renderLine(line, idx)}
-                            </div>
-                        ))}
-
+                        <TabIconSVG type={activeTabType} />
                     </div>
 
+                    {/* Vertical Ruler Content (starts from top, ignoring horizontal ruler) */}
+                    <div
+                        ref={verticalRulerRef}
+                        className="absolute top-[24px] left-0 right-0 bottom-0 overflow-hidden"
+                    >
+                        <div className="relative w-full h-full mt-4 md:mt-8">
+                            {/* Top Margin (Gray) */}
+                            <div className="absolute top-0 left-0 right-0 bg-[#d4d4d4]" style={{ height: `${MARGIN_LEFT_PX}px` }}></div>
+
+                            {/* Bottom Margin (Gray) */}
+                            <div className="absolute bottom-0 left-0 right-0 bg-[#d4d4d4]" style={{ height: `${MARGIN_LEFT_PX}px` }}></div>
+
+                            {/* Active Vertical Ruler (White) */}
+                            <div
+                                className="absolute left-0 right-0 bg-white"
+                                style={{ top: `${MARGIN_LEFT_PX}px`, bottom: `${MARGIN_LEFT_PX}px` }}
+                            >
+                                {/* Vertical Ticks */}
+                                {Array.from({ length: 56 }).map((_, i) => {
+                                    const posCm = i * 0.5;
+                                    const isCm = i % 2 === 0;
+                                    const topPx = posCm * CM_TO_PX;
+
+                                    return (
+                                        <div key={i} className="absolute left-0 right-0" style={{ top: `${topPx}px` }}>
+                                            {isCm ? (
+                                                <>
+                                                    <div className="absolute right-0 h-[1px] w-[6px] bg-slate-500"></div>
+                                                    {posCm > 0 && (
+                                                        <span className="absolute right-[8px] text-[8px] text-slate-500 font-sans" style={{ transform: 'translateY(-50%)' }}>
+                                                            {posCm}
+                                                        </span>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div className="absolute right-0 h-[1px] w-[3px] bg-slate-400"></div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* DOCUMENT AREA with Horizontal Ruler */}
+                <div
+                    ref={docContainerRef}
+                    onScroll={handleDocScroll}
+                    className="bg-[#e5e7eb] flex-1 flex flex-col overflow-auto custom-scrollbar"
+                >
+                    {/* Horizontal Ruler - attached to document */}
+                    <div className="shrink-0 sticky top-0 z-10 bg-[#f0f0f0] border-b border-slate-300 flex justify-center pl-4 pr-4 md:pl-8 md:pr-8">
+                        <div
+                            className="h-[24px] relative select-none overflow-hidden"
+                            style={{ width: `${DOC_WIDTH_PX}px` }}
+                        >
+                            {/* Left Margin (Gray) */}
+                            <div className="absolute top-0 bottom-0 left-0 bg-[#d4d4d4]" style={{ width: `${MARGIN_LEFT_PX}px` }}></div>
+
+                            {/* Right Margin (Gray) */}
+                            <div className="absolute top-0 bottom-0 right-0 bg-[#d4d4d4]" style={{ width: `${MARGIN_LEFT_PX}px` }}></div>
+
+                            {/* White ruler area */}
+                            <div
+                                className="absolute top-0 bottom-0 bg-white cursor-crosshair"
+                                style={{ left: `${MARGIN_LEFT_PX}px`, right: `${MARGIN_LEFT_PX}px` }}
+                                onClick={handleRulerClick}
+                            >
+                                {/* Ruler Ticks */}
+                                {Array.from({ length: 32 }).map((_, i) => {
+                                    const posCm = i * 0.5;
+                                    const isCm = i % 2 === 0;
+                                    const leftPx = posCm * CM_TO_PX;
+
+                                    return (
+                                        <div key={i} className="absolute top-0 bottom-0" style={{ left: `${leftPx}px` }}>
+                                            {isCm ? (
+                                                <>
+                                                    <div className="absolute bottom-0 w-[1px] h-[6px] bg-slate-500"></div>
+                                                    {posCm > 0 && (
+                                                        <span className="absolute bottom-[2px] text-[8px] text-slate-500 font-sans" style={{ transform: 'translateX(-50%)' }}>
+                                                            {posCm}
+                                                        </span>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div className="absolute bottom-0 w-[1px] h-[3px] bg-slate-400"></div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Tab Stops */}
+                                {tabStops.map(tab => (
+                                    <div
+                                        key={tab.id}
+                                        className="absolute bottom-0 w-4 h-4 -ml-2 z-20 hover:scale-125 transition-transform flex items-end justify-center cursor-pointer"
+                                        style={{ left: `${tab.pos * CM_TO_PX}px` }}
+                                        title="Klik untuk hapus"
+                                    >
+                                        <TabIconSVG type={tab.type} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Document Paper */}
+                    <div className="flex-1 p-4 md:p-8 flex justify-center">
+                        <div
+                            className="bg-white shadow-[0_0_30px_rgba(0,0,0,0.2)] relative flex flex-col border border-slate-300"
+                            style={{ width: `${DOC_WIDTH_PX}px`, minHeight: '29.7cm' }}
+                        >
+                            {/* EDITABLE CONTENT */}
+                            <div
+                                className="flex-1 font-serif text-[15px] leading-relaxed relative"
+                                style={{
+                                    paddingTop: `${MARGIN_LEFT_PX}px`,
+                                    paddingLeft: `${MARGIN_LEFT_PX}px`,
+                                    paddingRight: `${MARGIN_LEFT_PX}px`,
+                                    paddingBottom: '96px'
+                                }}
+                            >
+                                {/* Guide Line for Left Margin */}
+                                <div className="absolute top-0 bottom-0 border-l border-dashed border-slate-200 pointer-events-none" style={{ left: `${MARGIN_LEFT_PX}px` }}></div>
+
+                                {lines.map((line, idx) => (
+                                    <div key={idx}>
+                                        {renderLine(line, idx)}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* FOOTER (MATCHING WordParagraph.jsx) */}
-            <footer className="bg-indigo-700 text-white px-6 py-2 flex items-center justify-between text-[9px] font-black uppercase tracking-[0.3em] shrink-0 border-t border-indigo-600">
-                <div className="flex gap-8">
-                    <span className="flex items-center gap-2 font-mono">Page 1 of 1</span>
-                    <span className="flex items-center gap-2 font-mono">Tab Stops: {tabStops.length}</span>
+            {/* FOOTER STATUS BAR */}
+            <footer className="bg-[#f3f3f3] text-regal-blue px-2 py-1 flex items-center justify-between text-[11px] font-sans border-t border-[#d6d6d6] shrink-0 select-none text-slate-600">
+                <div className="flex gap-4 px-2">
+                    <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default">Page 1 of 1</span>
+                    <span className="flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default">Tab Stops: {tabStops.length}</span>
+                    <span className="hidden md:flex items-center gap-1 hover:bg-[#e0e0e0] px-1 rounded cursor-default">Active: {activeTabType.toUpperCase()}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-2 font-mono">Active Tab: {activeTabType.toUpperCase()}</span>
-                    <div className="w-px h-3 bg-white/20 mx-2"></div>
-                    <Scaling size={12} className="opacity-50" />
-                    <span>85%</span>
+                <div className="flex items-center gap-2 px-4">
+                    <Scaling size={12} className="text-slate-500" />
+                    <span className="font-mono text-xs">100%</span>
                 </div>
             </footer>
+
+            {/* FLOATING HELP BUTTON */}
+            <div className="fixed bottom-6 right-6 z-40 group">
+                <button
+                    className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+                    title="Bantuan"
+                >
+                    <Info size={24} />
+                </button>
+                {/* Tooltip Popup */}
+                <div className="absolute bottom-full right-0 mb-3 w-64 bg-slate-900 text-white text-xs rounded-lg p-4 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <p className="font-bold text-indigo-300 mb-2">Cara Menggunakan Tab:</p>
+                    <p className="mb-1.5 flex items-center gap-2"><MousePointer2 size={12} /> <b>Klik Ruler</b> → tambah tab stop</p>
+                    <p className="mb-1.5 flex items-center gap-2"><MoveHorizontal size={12} /> Tekan <b>TAB</b> → loncat ke tab</p>
+                    <p className="flex items-center gap-2"><Trash2 size={12} className="text-red-400" /> <b>Klik Icon Tab</b> → hapus tab</p>
+                </div>
+            </div>
         </div>
     );
 };
 
 export default WordTabulator;
+
+
+

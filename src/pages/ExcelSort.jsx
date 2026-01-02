@@ -168,7 +168,7 @@ const ExcelSort = () => {
 
             {/* --- WORKSPACE --- */}
             {/* Removed padding (p-4) and gap (gap-4) as requested to remove "red line" space */}
-            <main className="flex flex-col relative bg-[#E6E6E6]">
+            <main className="flex flex-col relative bg-[#E6E6E6] flex-1 overflow-hidden">
 
                 {/* --- FORMULA BAR (Replaces Title) --- */}
                 <div className="bg-white border-b border-slate-300 flex items-center p-1.5 gap-2 z-10 shadow-sm sticky top-0">
@@ -215,181 +215,184 @@ const ExcelSort = () => {
                     )}
                 </div>
 
-                {/* --- GRID TABLE (EXCEL STYLE) --- */}
-                {/* Applied Zoom Transform */}
-                <div className="bg-[#E6E6E6] relative" ref={menuRef}>
-                    <div
-                        className="bg-white shadow-xl origin-top-left transition-transform duration-200 ease-out inline-block min-w-full"
-                        style={{ transform: `scale(${zoom / 100})`, width: `${100 * (100 / zoom)}%` }} // Adjust width to compensate scale
-                    >
-                        <table className="w-full text-sm border-collapse table-fixed cursor-default">
-                            <colgroup>
-                                <col className="w-10 bg-[#F4F5F6]" /> {/* Row Index */}
-                                <col className="w-64" /> {/* A */}
-                                <col className="w-28" /> {/* B */}
-                                <col className="w-24" /> {/* C */}
-                                <col className="w-24" /> {/* D */}
-                                <col /> {/* E (Auto) */}
-                            </colgroup>
-                            <thead className="bg-[#E6E6E6] sticky top-0 z-20 shadow-sm">
-                                {/* SYSTEM HEADERS (A, B, C...) */}
-                                <tr>
-                                    <th className="h-6 border border-slate-300 bg-[#E6E6E6] relative">
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-40">
-                                            <svg width="10" height="10" viewBox="0 0 10 10">
-                                                <path d="M10 10 L0 10 L10 0 Z" fill="#666" />
-                                            </svg>
-                                        </div>
-                                    </th>
-                                    <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
-                                        A
-                                        <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
-                                    </th>
-                                    <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
-                                        B
-                                        <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
-                                    </th>
-                                    <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
-                                        C
-                                        <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
-                                    </th>
-                                    <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
-                                        D
-                                        <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
-                                    </th>
-                                    <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors">E</th>
-                                </tr>
-                                {/* SEMANTIC HEADERS (Row 1) */}
-                                <tr>
-                                    <th className="h-8 border border-slate-300 bg-[#F8F9FA] text-slate-500 font-mono text-center text-xs">1</th>
-                                    <th className="border border-slate-300 relative px-2 py-1 bg-white text-left align-middle group">
-                                        <div className="flex items-center justify-between pointer-events-none">
-                                            <span className="font-bold text-slate-700 text-xs">Nama Siswa</span>
-                                            {isFilterModeActive && (
-                                                <button
-                                                    onClick={() => setOpenFilterMenu(openFilterMenu === 'nama' ? null : 'nama')}
-                                                    className={`pointer-events-auto p-0.5 rounded border shadow-sm ${activeFilters.nama.length > 0 ? 'bg-green-50 border-green-500' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
-                                                >
-                                                    <ChevronDown size={12} className="text-slate-600" />
-                                                </button>
-                                            )}
-                                        </div>
-                                        {/* Filter Dropdown Nama */}
-                                        {openFilterMenu === 'nama' && <FilterMenu column="nama" options={uniqueValues.nama} activeFilters={activeFilters.nama} onToggle={handleFilterToggle} onClear={() => clearFilter('nama')} />}
-                                    </th>
-                                    <th className="border border-slate-300 relative px-2 py-1 bg-white text-left align-middle group">
-                                        <div className="flex items-center justify-between pointer-events-none">
-                                            <span className="font-bold text-slate-700 text-xs">Kelas</span>
-                                            {isFilterModeActive && (
-                                                <button
-                                                    onClick={() => setOpenFilterMenu(openFilterMenu === 'kelas' ? null : 'kelas')}
-                                                    className={`pointer-events-auto p-0.5 rounded border shadow-sm ${activeFilters.kelas.length > 0 ? 'bg-green-50 border-green-500' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
-                                                >
-                                                    <ChevronDown size={12} className="text-slate-600" />
-                                                </button>
-                                            )}
-                                        </div>
-                                        {/* Filter Dropdown Kelas */}
-                                        {openFilterMenu === 'kelas' && <FilterMenu column="kelas" options={uniqueValues.kelas} activeFilters={activeFilters.kelas} onToggle={handleFilterToggle} onClear={() => clearFilter('kelas')} />}
-                                    </th>
-                                    <th className="border border-slate-300 relative px-2 py-1 bg-white text-center align-middle group">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <span className="font-bold text-slate-700 uppercase text-xs">Nilai</span>
-                                        </div>
-                                    </th>
-                                    <th className="border border-slate-300 relative px-2 py-1 bg-white text-left align-middle group">
-                                        <div className="flex items-center justify-between pointer-events-none">
-                                            <span className="font-bold text-slate-700 text-xs">Status</span>
-                                            {isFilterModeActive && (
-                                                <button
-                                                    onClick={() => setOpenFilterMenu(openFilterMenu === 'status' ? null : 'status')}
-                                                    className={`pointer-events-auto p-0.5 rounded border shadow-sm ${activeFilters.status.length > 0 ? 'bg-green-50 border-green-500' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
-                                                >
-                                                    <ChevronDown size={12} className="text-slate-600" />
-                                                </button>
-                                            )}
-                                        </div>
-                                        {/* Filter Dropdown Status */}
-                                        {openFilterMenu === 'status' && <FilterMenu column="status" options={uniqueValues.status} activeFilters={activeFilters.status} onToggle={handleFilterToggle} onClear={() => clearFilter('status')} />}
-                                    </th>
-                                    {/* Empty Column for visual balance mapped to E but data only goes to D? data has Nama, Kelas, Nilai, Status (4 cols). So A B C D. E is empty. */}
-                                    <th className="border border-slate-300 bg-white"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredAndSortedData.length > 0 ? filteredAndSortedData.map((row, idx) => (
-                                    <tr
-                                        key={row.id}
-                                        onClick={() => setSelectedRow(row)}
-                                        className={`hover:bg-blue-50 cursor-pointer ${selectedRow?.id === row.id ? 'bg-blue-100 ring-2 ring-inset ring-blue-500 z-10 relative' : ''}`}
-                                    >
-                                        <td className="h-6 border border-slate-200 bg-[#E6E6E6]/50 text-center font-mono text-[10px] text-slate-500">{idx + 2}</td>
-                                        <td className="border border-slate-200 px-2 h-6 align-middle font-medium text-xs">{row.nama}</td>
-                                        <td className="border border-slate-200 px-2 h-6 align-middle text-center text-slate-600 text-xs">{row.kelas}</td>
-                                        <td className="border border-slate-200 px-2 h-6 align-middle text-center text-xs">
-                                            <span className={`inline-block w-8 text-center font-bold ${row.nilai >= 75 ? 'text-green-700' : 'text-red-600'}`}>
-                                                {row.nilai}
-                                            </span>
-                                        </td>
-                                        <td className="border border-slate-200 px-2 h-6 align-middle text-center">
-                                            <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${row.status === 'Lulus' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                {row.status === 'Lulus' ? <Check size={10} /> : <X size={10} />}
-                                                {row.status.toUpperCase()}
-                                            </div>
-                                        </td>
-                                        {/* Empty E Col Data */}
-                                        <td className="border border-slate-200"></td>
-                                    </tr>
-                                )) : (
+                <div className="flex-1 overflow-auto custom-scrollbar relative">
+                    {/* --- GRID TABLE (EXCEL STYLE) --- */}
+                    {/* Applied Zoom Transform */}
+                    <div className="bg-[#E6E6E6] relative" ref={menuRef}>
+                        <div
+                            className="bg-white shadow-xl origin-top-left transition-transform duration-200 ease-out inline-block min-w-full"
+                            style={{ transform: `scale(${zoom / 100})`, width: `${100 * (100 / zoom)}%` }} // Adjust width to compensate scale
+                        >
+                            <table className="w-full text-sm border-collapse table-fixed cursor-default bg-white">
+                                <colgroup>
+                                    <col className="w-10 bg-[#F4F5F6]" /> {/* Row Index */}
+                                    <col className="w-64" /> {/* A */}
+                                    <col className="w-28" /> {/* B */}
+                                    <col className="w-20" /> {/* C */}
+                                    <col className="w-32" /> {/* D */}
+                                    <col /> {/* E (Auto) */}
+                                </colgroup>
+                                <thead className="bg-[#E6E6E6] sticky top-0 z-20 shadow-sm">
+                                    {/* SYSTEM HEADERS (A, B, C...) */}
                                     <tr>
-                                        <td colSpan="6" className="h-64 border border-slate-200 text-center bg-slate-50">
-                                            <div className="flex flex-col items-center justify-center opacity-40">
-                                                <Search size={64} className="mb-4" />
-                                                <p className="text-lg font-bold italic">#VALUE!: Tidak ada data yang sesuai</p>
-                                                <p className="text-xs">Coba hapus beberapa filter untuk menampilkan data.</p>
+                                        <th className="h-6 border border-slate-300 bg-[#E6E6E6] relative">
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-40">
+                                                <svg width="10" height="10" viewBox="0 0 10 10">
+                                                    <path d="M10 10 L0 10 L10 0 Z" fill="#666" />
+                                                </svg>
                                             </div>
-                                        </td>
+                                        </th>
+                                        <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
+                                            A
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
+                                        </th>
+                                        <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
+                                            B
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
+                                        </th>
+                                        <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
+                                            C
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
+                                        </th>
+                                        <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors relative group">
+                                            D
+                                            <div className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-green-500"></div>
+                                        </th>
+                                        <th className="border border-slate-300 bg-[#E6E6E6] text-slate-700 font-normal hover:bg-[#D4D4D4] transition-colors">E</th>
                                     </tr>
-                                )}
-                                {/* Empty Rows Padding */}
-                                {[...Array(Math.max(0, 14 - filteredAndSortedData.length))].map((_, i) => (
-                                    <tr key={`empty-${i}`}>
-                                        <td className="h-6 border border-slate-200 bg-[#E6E6E6]/50 text-center font-mono text-[10px] text-slate-300 italic">{filteredAndSortedData.length + i + 2}</td>
-                                        <td className="border border-slate-200 h-6"></td>
-                                        <td className="border border-slate-200 h-6"></td>
-                                        <td className="border border-slate-200 h-6"></td>
-                                        <td className="border border-slate-200 h-6"></td>
-                                        <td className="border border-slate-200 h-6"></td>
+                                    {/* SEMANTIC HEADERS (Row 1) */}
+                                    <tr>
+                                        <th className="h-8 border border-slate-300 bg-[#F8F9FA] text-slate-500 font-mono text-center text-xs">1</th>
+                                        <th className="border border-slate-300 relative px-2 py-1 bg-white text-left align-middle group">
+                                            <div className="flex items-center justify-between pointer-events-none">
+                                                <span className="font-bold text-slate-700 text-xs">Nama Siswa</span>
+                                                {isFilterModeActive && (
+                                                    <button
+                                                        onClick={() => setOpenFilterMenu(openFilterMenu === 'nama' ? null : 'nama')}
+                                                        className={`pointer-events-auto p-0.5 rounded border shadow-sm ${activeFilters.nama.length > 0 ? 'bg-green-50 border-green-500' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
+                                                    >
+                                                        <ChevronDown size={12} className="text-slate-600" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {/* Filter Dropdown Nama */}
+                                            {openFilterMenu === 'nama' && <FilterMenu column="nama" options={uniqueValues.nama} activeFilters={activeFilters.nama} onToggle={handleFilterToggle} onClear={() => clearFilter('nama')} />}
+                                        </th>
+                                        <th className="border border-slate-300 relative px-2 py-1 bg-white text-left align-middle group">
+                                            <div className="flex items-center justify-between pointer-events-none">
+                                                <span className="font-bold text-slate-700 text-xs">Kelas</span>
+                                                {isFilterModeActive && (
+                                                    <button
+                                                        onClick={() => setOpenFilterMenu(openFilterMenu === 'kelas' ? null : 'kelas')}
+                                                        className={`pointer-events-auto p-0.5 rounded border shadow-sm ${activeFilters.kelas.length > 0 ? 'bg-green-50 border-green-500' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
+                                                    >
+                                                        <ChevronDown size={12} className="text-slate-600" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {/* Filter Dropdown Kelas */}
+                                            {openFilterMenu === 'kelas' && <FilterMenu column="kelas" options={uniqueValues.kelas} activeFilters={activeFilters.kelas} onToggle={handleFilterToggle} onClear={() => clearFilter('kelas')} />}
+                                        </th>
+                                        <th className="border border-slate-300 relative px-2 py-1 bg-white text-center align-middle group">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <span className="font-bold text-slate-700 uppercase text-xs">Nilai</span>
+                                            </div>
+                                        </th>
+                                        <th className="border border-slate-300 relative px-2 py-1 bg-white text-left align-middle group">
+                                            <div className="relative flex items-center w-full pointer-events-none">
+                                                <span className="font-bold text-slate-700 text-xs pl-2">Status</span>
+                                                {isFilterModeActive && (
+                                                    <button
+                                                        onClick={() => setOpenFilterMenu(openFilterMenu === 'status' ? null : 'status')}
+                                                        className={`pointer-events-auto absolute right-0 p-0.5 rounded border shadow-sm ${activeFilters.status.length > 0 ? 'bg-green-50 border-green-500' : 'bg-slate-100 border-slate-300 hover:bg-slate-200'}`}
+                                                    >
+                                                        <ChevronDown size={12} className="text-slate-600" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {/* Filter Dropdown Status */}
+                                            {openFilterMenu === 'status' && <FilterMenu column="status" options={uniqueValues.status} activeFilters={activeFilters.status} onToggle={handleFilterToggle} onClear={() => clearFilter('status')} />}
+                                        </th>
+                                        {/* Empty Column for visual balance mapped to E but data only goes to D? data has Nama, Kelas, Nilai, Status (4 cols). So A B C D. E is empty. */}
+                                        <th className="border border-slate-300 bg-white"></th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {filteredAndSortedData.length > 0 ? filteredAndSortedData.map((row, idx) => (
+                                        <tr
+                                            key={row.id}
+                                            onClick={() => setSelectedRow(row)}
+                                            className={`hover:bg-blue-50 cursor-pointer ${selectedRow?.id === row.id ? 'bg-blue-100 ring-2 ring-inset ring-blue-500 z-10 relative' : ''}`}
+                                        >
+                                            <td className="h-6 border border-slate-200 bg-[#E6E6E6]/50 text-center font-mono text-[10px] text-slate-500">{idx + 2}</td>
+                                            <td className="border border-slate-200 px-2 h-6 align-middle font-medium text-xs">{row.nama}</td>
+                                            <td className="border border-slate-200 px-2 h-6 align-middle text-center text-slate-600 text-xs">{row.kelas}</td>
+                                            <td className="border border-slate-200 px-2 h-6 align-middle text-center text-xs">
+                                                <span className={`inline-block w-8 text-center font-bold ${row.nilai >= 75 ? 'text-green-700' : 'text-red-600'}`}>
+                                                    {row.nilai}
+                                                </span>
+                                            </td>
+                                            <td className="border border-slate-200 px-2 h-6 align-middle text-left pl-4">
+                                                <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${row.status === 'Lulus' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                    {row.status === 'Lulus' ? <Check size={10} /> : <X size={10} />}
+                                                    {row.status.toUpperCase()}
+                                                </div>
+                                            </td>
+                                            {/* Empty E Col Data */}
+                                            <td className="border border-slate-200"></td>
+                                        </tr>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan="6" className="h-64 border border-slate-200 text-center bg-slate-50">
+                                                <div className="flex flex-col items-center justify-center opacity-40">
+                                                    <Search size={64} className="mb-4" />
+                                                    <p className="text-lg font-bold italic">#VALUE!: Tidak ada data yang sesuai</p>
+                                                    <p className="text-xs">Coba hapus beberapa filter untuk menampilkan data.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {/* Empty Rows Padding */}
+                                    {[...Array(Math.max(0, 14 - filteredAndSortedData.length))].map((_, i) => (
+                                        <tr key={`empty-${i}`}>
+                                            <td className="h-6 border border-slate-200 bg-[#E6E6E6]/50 text-center font-mono text-[10px] text-slate-300 italic">{filteredAndSortedData.length + i + 2}</td>
+                                            <td className="border border-slate-200 h-6"></td>
+                                            <td className="border border-slate-200 h-6"></td>
+                                            <td className="border border-slate-200 h-6"></td>
+                                            <td className="border border-slate-200 h-6"></td>
+                                            <td className="border border-slate-200 h-6"></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
 
-                        {/* --- STATUS BAR (Integrated Footer) --- */}
-                        <div className="bg-[#217346] text-white px-4 py-1.5 flex items-center justify-between text-[10px] select-none shadow-sm border-t border-[#1e6b41] mt-0">
-                            <div className="flex items-center gap-4">
-                                <div className="font-bold uppercase tracking-wider">READY</div>
-                                <div className="flex items-center gap-1 opacity-80 hover:opacity-100 cursor-pointer">
-                                    <FileSpreadsheet size={10} />
-                                    <span>Page 1 of 1</span>
-                                </div>
-                                <div className="opacity-80">
-                                    {filteredAndSortedData.length} records found
-                                </div>
-                            </div>
 
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-1 mr-2 opacity-80">
-                                    <button className="p-0.5 hover:bg-white/20 rounded" title="Normal View"><LayoutGrid size={12} /></button>
-                                    <button className="p-0.5 hover:bg-white/20 rounded" title="Page Layout"><Settings2 size={12} /></button>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="hover:bg-white/20 rounded p-0.5"> - </button>
-                                    <input type="range" min="50" max="200" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-24 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white" />
-                                    <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="hover:bg-white/20 rounded p-0.5"> + </button>
-                                    <span className="w-8 text-right font-mono">{zoom}%</span>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/* --- STATUS BAR (FIXED BOTTOM) --- */}
+                <div className="bg-[#217346] text-white px-4 py-1.5 flex items-center justify-between text-[10px] select-none shadow-sm border-t border-[#1e6b41] z-30 shrink-0 relative">
+                    <div className="flex items-center gap-4">
+                        <div className="font-bold uppercase tracking-wider">READY</div>
+                        <div className="flex items-center gap-1 opacity-80 hover:opacity-100 cursor-pointer">
+                            <FileSpreadsheet size={10} />
+                            <span>Page 1 of 1</span>
+                        </div>
+                        <div className="opacity-80">
+                            {filteredAndSortedData.length} records found
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1 mr-2 opacity-80">
+                            <button className="p-0.5 hover:bg-white/20 rounded" title="Normal View"><LayoutGrid size={12} /></button>
+                            <button className="p-0.5 hover:bg-white/20 rounded" title="Page Layout"><Settings2 size={12} /></button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => setZoom(Math.max(50, zoom - 10))} className="hover:bg-white/20 rounded p-0.5"> - </button>
+                            <input type="range" min="50" max="200" value={zoom} onChange={(e) => setZoom(Number(e.target.value))} className="w-24 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white" />
+                            <button onClick={() => setZoom(Math.min(200, zoom + 10))} className="hover:bg-white/20 rounded p-0.5"> + </button>
+                            <span className="w-8 text-right font-mono">{zoom}%</span>
                         </div>
                     </div>
                 </div>
@@ -408,67 +411,69 @@ const ExcelSort = () => {
             </button>
 
             {/* --- DRAWER PANDUAN --- */}
-            {isDrawerOpen && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex justify-end">
-                    <div className="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col animate-slide-left">
-                        <div className="p-6 bg-[#217346] text-white flex justify-between items-center">
-                            <div>
-                                <h3 className="text-xl font-black italic">DRAWER PANDUAN</h3>
-                                <p className="text-[10px] opacity-70">Topik: Sort & AutoFilter</p>
+            {
+                isDrawerOpen && (
+                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex justify-end">
+                        <div className="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col animate-slide-left">
+                            <div className="p-6 bg-[#217346] text-white flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-black italic">DRAWER PANDUAN</h3>
+                                    <p className="text-[10px] opacity-70">Topik: Sort & AutoFilter</p>
+                                </div>
+                                <button onClick={() => setIsDrawerOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                    <X size={24} />
+                                </button>
                             </div>
-                            <button onClick={() => setIsDrawerOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                                <X size={24} />
-                            </button>
-                        </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            <div className="space-y-2">
-                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Tujuan Praktik</h4>
-                                <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                    <p className="text-sm text-blue-900 leading-relaxed">
-                                        Siswa mampu menggunakan fitur **Filter** untuk menyaring data spesifik dan fitur **Sort** untuk mengurutkan data berdasarkan kriteria tertentu.
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                <div className="space-y-2">
+                                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Tujuan Praktik</h4>
+                                    <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                        <p className="text-sm text-blue-900 leading-relaxed">
+                                            Siswa mampu menggunakan fitur **Filter** untuk menyaring data spesifik dan fitur **Sort** untuk mengurutkan data berdasarkan kriteria tertentu.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Langkah Teknis</h4>
+                                    <div className="space-y-3">
+                                        {[
+                                            { t: "Aktifkan Filter", d: "Klik ikon Filter di tab Ribbon agar panah muncul di judul kolom." },
+                                            { t: "Pilih Kriteria", d: "Klik panah pada kolom 'Kelas', lalu beri centang pada '8A'." },
+                                            { t: "Multi-Filter", d: "Klik panah pada kolom 'Status', lalu centang 'Lulus'." },
+                                            { t: "Analisis", d: "Perhatikan Baris Status di bawah untuk melihat jumlah data tersaring." }
+                                        ].map((step, i) => (
+                                            <div key={i} className="flex gap-4">
+                                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-xs border border-green-200">{i + 1}</span>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-800">{step.t}</p>
+                                                    <p className="text-xs text-slate-500 leading-snug">{step.d}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                                    <p className="text-[11px] text-amber-800 leading-relaxed italic">
+                                        <strong>Tips Informatika:</strong> Sorting membantu kamu melihat ranking (Nilai), sedangkan Filtering membantu kamu fokus pada grup tertentu (Kelas).
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
-                                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Langkah Teknis</h4>
-                                <div className="space-y-3">
-                                    {[
-                                        { t: "Aktifkan Filter", d: "Klik ikon Filter di tab Ribbon agar panah muncul di judul kolom." },
-                                        { t: "Pilih Kriteria", d: "Klik panah pada kolom 'Kelas', lalu beri centang pada '8A'." },
-                                        { t: "Multi-Filter", d: "Klik panah pada kolom 'Status', lalu centang 'Lulus'." },
-                                        { t: "Analisis", d: "Perhatikan Baris Status di bawah untuk melihat jumlah data tersaring." }
-                                    ].map((step, i) => (
-                                        <div key={i} className="flex gap-4">
-                                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-xs border border-green-200">{i + 1}</span>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-800">{step.t}</p>
-                                                <p className="text-xs text-slate-500 leading-snug">{step.d}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className="p-6 border-t bg-slate-50">
+                                <button
+                                    onClick={() => setIsDrawerOpen(false)}
+                                    className="w-full py-3 bg-[#217346] text-white rounded font-black uppercase tracking-tighter hover:bg-[#1a5c38] transition-all shadow-md"
+                                >
+                                    Kembali Ke Lab
+                                </button>
                             </div>
-
-                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
-                                <p className="text-[11px] text-amber-800 leading-relaxed italic">
-                                    <strong>Tips Informatika:</strong> Sorting membantu kamu melihat ranking (Nilai), sedangkan Filtering membantu kamu fokus pada grup tertentu (Kelas).
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="p-6 border-t bg-slate-50">
-                            <button
-                                onClick={() => setIsDrawerOpen(false)}
-                                className="w-full py-3 bg-[#217346] text-white rounded font-black uppercase tracking-tighter hover:bg-[#1a5c38] transition-all shadow-md"
-                            >
-                                Kembali Ke Lab
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <style>{`
         @keyframes slide-left {
@@ -479,7 +484,7 @@ const ExcelSort = () => {
           animation: slide-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
-        </div>
+        </div >
     );
 };
 

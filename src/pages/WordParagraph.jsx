@@ -143,15 +143,17 @@ const WordParagraph = () => {
             </div>
 
             {/* DOCUMENT AREA */}
-            <div className="bg-[#a0a0a0] p-4 md:p-8 flex justify-center flex-1 overflow-y-auto custom-scrollbar">
-                {/* Scale wrapper */}
-                <div
-                    className="origin-top transition-transform duration-200 ease-out py-8"
-                    style={{ transform: `scale(${zoom / 100})` }}
-                >
+            <div className="bg-[#e5e7eb] p-4 md:p-8 flex justify-center flex-1 overflow-auto relative custom-scrollbar">
+
+                {/* Scale wrapper to fit view if paper is huge */}
+                <div className="origin-top transition-transform duration-200 ease-out py-8" style={{ transform: `scale(${zoom / 100})` }}>
                     <div
-                        className="bg-white w-full max-w-[800px] shadow-2xl min-h-[1000px] font-serif leading-relaxed animate-in fade-in duration-500"
-                        style={{ padding: '3cm' }}
+                        className="bg-white shadow-[0_0_50px_rgba(0,0,0,0.5)] font-serif text-xs md:text-sm leading-relaxed text-slate-900 border border-slate-300 relative"
+                        style={{
+                            width: '21cm',
+                            minHeight: '29.7cm',
+                            padding: '2.54cm'
+                        }}
                     >
 
                         <h1 className="text-xl font-bold mb-6 text-center text-slate-900 uppercase">Laporan Kegiatan Sekolah</h1>
