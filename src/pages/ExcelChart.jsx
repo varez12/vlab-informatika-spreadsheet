@@ -81,7 +81,7 @@ const ExcelChart = () => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-white font-sans text-slate-800">
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-white font-sans text-slate-800 overflow-y-auto">
 
             {/* --- HEADER (Green Bar) --- */}
             <header className="bg-[#217346] text-white px-4 py-1.5 flex justify-between items-center z-30 shadow-sm relative">

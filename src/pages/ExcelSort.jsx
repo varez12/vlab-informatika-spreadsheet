@@ -110,7 +110,7 @@ const ExcelSort = () => {
     const [zoom, setZoom] = useState(100);
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F3F2F1] font-sans text-slate-800">
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#F3F2F1] font-sans text-slate-800 overflow-y-auto">
 
 
             {/* --- RIBBON HEADER --- */}

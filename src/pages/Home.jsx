@@ -18,23 +18,24 @@ import {
 const ModuleCard = ({ to, title, description, icon: Icon, color }) => (
     <Link
         to={to}
-        className="group relative overflow-hidden bg-white rounded-2xl shadow-lg border border-slate-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 p-5 flex flex-col h-full"
+        className="group relative overflow-hidden bg-white rounded-2xl shadow-lg border border-slate-100 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 p-5 flex flex-col h-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        aria-label={`${title}: ${description}`}
     >
-        <div className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${color} opacity-10 rounded-bl-[80px] -mr-8 -mt-8 transition-transform group-hover:scale-110`} />
+        <div className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${color} opacity-10 rounded-bl-[80px] -mr-8 -mt-8 transition-transform group-hover:scale-110`} aria-hidden="true" />
 
-        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-white shadow-md mb-3 group-hover:scale-110 transition-transform`}>
-            <Icon size={22} />
+        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center text-white shadow-md mb-3 group-hover:scale-110 transition-transform`} aria-hidden="true">
+            <Icon size={22} aria-hidden="true" />
         </div>
 
         <h3 className="text-lg font-bold text-slate-800 mb-1.5 group-hover:text-blue-600 transition-colors leading-tight">
             {title}
         </h3>
 
-        <p className="text-slate-500 text-xs leading-relaxed mb-4 flex-grow">
+        <p className="text-slate-600 text-xs leading-relaxed mb-4 flex-grow">
             {description}
         </p>
 
-        <div className="flex items-center text-xs font-bold text-slate-400 group-hover:text-blue-600 transition-all">
+        <div className="flex items-center text-xs font-bold text-slate-500 group-hover:text-blue-600 transition-all" aria-hidden="true">
             Buka Modul <ArrowRight size={14} className="ml-1.5 group-hover:translate-x-1 transition-all" />
         </div>
     </Link>

@@ -103,7 +103,7 @@ const IntegrasiOffice = () => {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden relative">
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 font-sans text-slate-800 overflow-hidden relative">
 
             {/* CUSTOM CONTEXT MENU */}
             {contextMenu.visible && (

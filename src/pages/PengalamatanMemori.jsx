@@ -70,7 +70,7 @@ const PengalamatanMemori = () => {
     };
 
     return (
-        <div className="h-screen bg-slate-900 p-6 md:p-8 pt-28 font-mono text-slate-200 overflow-y-auto">
+        <div className="h-[calc(100vh-4rem)] bg-slate-900 p-6 md:p-8 font-mono text-slate-200 overflow-y-auto">
 
             {/* Header */}
             <div className="max-w-[1400px] mx-auto mb-8 flex justify-between items-center border-b border-slate-700 pb-6">

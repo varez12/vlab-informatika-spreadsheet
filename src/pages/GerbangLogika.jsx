@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import * as THREE from 'three';
+import React, { useState, useMemo } from 'react';
 import {
     Cpu,
     Lightbulb,
@@ -99,90 +98,11 @@ const GerbangLogika = () => {
     const [inputC, setInputC] = useState(false);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-    const mountRef = useRef(null);
     const gateData = GATES_CONFIG[activeGate];
 
     const outputValue = useMemo(() => {
         return gateData.logic(inputA, inputB, inputC);
     }, [activeGate, inputA, inputB, inputC]);
-
-    // --- Three.js Implementation ---
-    useEffect(() => {
-        if (!mountRef.current) return;
-
-        const width = mountRef.current.clientWidth;
-        const height = mountRef.current.clientHeight;
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-        renderer.setSize(width, height);
-        mountRef.current.appendChild(renderer.domElement);
-
-        const geometry = new THREE.BoxGeometry(3, 0.6, 3);
-        const material = new THREE.MeshPhongMaterial({ color: 0x1e293b });
-        const chip = new THREE.Mesh(geometry, material);
-        scene.add(chip);
-
-        const pinGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.4, 32);
-        const pinMat = new THREE.MeshPhongMaterial({ color: 0x94a3b8 });
-
-        for (let i = 0; i < (gateData.inputs + 1); i++) {
-            const pin = new THREE.Mesh(pinGeo, pinMat);
-            pin.position.set(-1.5, -0.3, -1.2 + i * 0.8);
-            chip.add(pin);
-        }
-
-        const lightGeo = new THREE.SphereGeometry(0.35, 32, 32);
-        const lightMat = new THREE.MeshPhongMaterial({
-            color: outputValue ? 0x22c55e : 0x334155,
-            emissive: outputValue ? 0x22c55e : 0x000000,
-            emissiveIntensity: 1
-        });
-        const led = new THREE.Mesh(lightGeo, lightMat);
-        led.position.set(0, 0.6, 0);
-        scene.add(led);
-
-        const pointLight = new THREE.PointLight(0xffffff, 1.2, 100);
-        pointLight.position.set(5, 5, 5);
-        scene.add(pointLight);
-        scene.add(new THREE.AmbientLight(0x404040));
-
-        camera.position.set(0, 3, 5);
-        camera.lookAt(0, 0, 0);
-
-        let animationId;
-        const animate = () => {
-            animationId = requestAnimationFrame(animate);
-            chip.rotation.y += 0.003;
-            led.rotation.y += 0.003;
-            led.material.color.setHex(outputValue ? 0x22c55e : 0x334155);
-            led.material.emissive.setHex(outputValue ? 0x22c55e : 0x000000);
-            renderer.render(scene, camera);
-        };
-
-        animate();
-
-        const handleResize = () => {
-            if (!mountRef.current) return;
-            const w = mountRef.current.clientWidth;
-            const h = mountRef.current.clientHeight;
-            renderer.setSize(w, h);
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-        };
-
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            cancelAnimationFrame(animationId);
-            if (mountRef.current && renderer.domElement) {
-                mountRef.current.removeChild(renderer.domElement);
-            }
-        };
-    }, [outputValue, gateData.inputs]);
 
     const handleToggleInput = (type) => {
         if (type === 'A') setInputA(!inputA);
@@ -297,22 +217,74 @@ const GerbangLogika = () => {
 
                         {/* KOLOM KANAN: Visualisasi 3D & Tabel */}
                         <div className="space-y-6">
-                            <section className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl flex flex-col min-h-[400px]">
+                            <section className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden shadow-xl flex flex-col">
                                 <div className="bg-slate-800/50 px-5 py-2 flex items-center justify-between border-b border-slate-700">
                                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                        <Activity size={14} /> Model Visual Perangkat
+                                        <Activity size={14} /> Visualisasi Rangkaian
                                     </span>
                                 </div>
-                                <div ref={mountRef} className="flex-1 w-full min-h-[300px] cursor-grab active:cursor-grabbing" />
-                                <div className="p-6 bg-slate-950/50 border-t border-slate-800">
+
+                                {/* Simple 2D Circuit Visualization */}
+                                <div className="flex-1 p-6 flex items-center justify-center min-h-[200px]">
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-2xl ${outputValue ? 'bg-green-500 shadow-green-500/20' : 'bg-slate-800'}`}>
+
+                                        {/* Input Terminal(s) */}
+                                        <div className="flex flex-col gap-3">
+                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg border-2 transition-all duration-300 ${inputA ? 'bg-blue-600 border-blue-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                                A
+                                            </div>
+                                            {gateData.inputs >= 2 && (
+                                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg border-2 transition-all duration-300 ${inputB ? 'bg-pink-600 border-pink-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                                    B
+                                                </div>
+                                            )}
+                                            {gateData.inputs >= 3 && (
+                                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg border-2 transition-all duration-300 ${inputC ? 'bg-yellow-600 border-yellow-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                                    C
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Connection Lines */}
+                                        <div className="flex flex-col gap-3 items-center">
+                                            <div className={`w-8 h-1 ${inputA ? 'bg-blue-500' : 'bg-slate-700'} transition-colors`}></div>
+                                            {gateData.inputs >= 2 && <div className={`w-8 h-1 ${inputB ? 'bg-pink-500' : 'bg-slate-700'} transition-colors`}></div>}
+                                            {gateData.inputs >= 3 && <div className={`w-8 h-1 ${inputC ? 'bg-yellow-500' : 'bg-slate-700'} transition-colors`}></div>}
+                                        </div>
+
+                                        {/* Gate Symbol */}
+                                        <div
+                                            className={`w-20 h-20 rounded-xl flex flex-col items-center justify-center font-black text-sm border-2 transition-all duration-300 shadow-lg`}
+                                            style={{
+                                                backgroundColor: gateData.color + '20',
+                                                borderColor: gateData.color,
+                                                color: gateData.color
+                                            }}
+                                        >
+                                            <Cpu size={24} />
+                                            <span className="text-[10px] mt-1">{activeGate}</span>
+                                        </div>
+
+                                        {/* Output Line */}
+                                        <div className={`w-8 h-1 ${outputValue ? 'bg-green-500' : 'bg-slate-700'} transition-colors`}></div>
+
+                                        {/* Output LED */}
+                                        <div className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 ${outputValue ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-slate-800 border-2 border-slate-700'}`}>
                                             <Lightbulb size={28} className={outputValue ? 'text-white' : 'text-slate-600'} />
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Output Status */}
+                                <div className="p-4 bg-slate-950/50 border-t border-slate-800">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-500 ${outputValue ? 'bg-green-500' : 'bg-slate-800'}`}>
+                                            <Lightbulb size={20} className={outputValue ? 'text-white' : 'text-slate-600'} />
+                                        </div>
                                         <div>
-                                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest mb-1">Output Hasil (Y)</p>
-                                            <h4 className={`text-xl font-bold ${outputValue ? 'text-green-400' : 'text-slate-600'}`}>
-                                                {outputValue ? 'LAMPU MENYALA (1)' : 'LAMPU PADAM (0)'}
+                                            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Output (Y)</p>
+                                            <h4 className={`text-lg font-bold ${outputValue ? 'text-green-400' : 'text-slate-600'}`}>
+                                                {outputValue ? 'HIGH (1)' : 'LOW (0)'}
                                             </h4>
                                         </div>
                                     </div>

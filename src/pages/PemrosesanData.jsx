@@ -114,7 +114,7 @@ const PemrosesanData = () => {
     }, [isProcessing]);
 
     return (
-        <div className="h-screen bg-slate-50 p-6 md:p-8 font-jakarta pb-40 overflow-y-auto">
+        <div className="h-[calc(100vh-4rem)] bg-slate-50 p-6 md:p-8 font-jakarta pb-40 overflow-y-auto">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-8">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">

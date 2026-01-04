@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -7,10 +7,7 @@ import MailMerger from './pages/MailMerger';
 import WordParagraph from './pages/WordParagraph';
 import WordPageLayout from './pages/WordPageLayout';
 import WordTabulator from './pages/WordTabulator';
-import BlocklyPage from './pages/Blockly';
-import BlocklyMaze from './pages/BlocklyMaze';
 import ExcelChart from "./pages/ExcelChart";
-import Hardware3D from './pages/Hardware';
 import ExcelSort from './pages/ExcelSort';
 import Biner from './pages/Biner';
 import Oktal from './pages/Oktal';
@@ -19,7 +16,22 @@ import PemrosesanData from './pages/PemrosesanData';
 import PengalamatanMemori from './pages/PengalamatanMemori';
 import IntegrasiOffice from './pages/IntegrasiOffice';
 import Explorer from './pages/Explorer';
-import GerbangLogika from './pages/GerbangLogika';
+
+// Lazy load heavy Three.js components for better performance on low-end devices
+const Hardware3D = lazy(() => import('./pages/Hardware'));
+const GerbangLogika = lazy(() => import('./pages/GerbangLogika'));
+const BlocklyPage = lazy(() => import('./pages/Blockly'));
+const BlocklyMaze = lazy(() => import('./pages/BlocklyMaze'));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="h-full w-full flex items-center justify-center bg-slate-900">
+    <div className="text-center">
+      <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-slate-400 text-sm font-medium">Memuat halaman...</p>
+    </div>
+  </div>
+);
 
 // Create a wrapper component to use the router hooks
 const AppContent = () => {
@@ -32,35 +44,46 @@ const AppContent = () => {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col font-sans text-gray-900 overflow-hidden">
+      {/* Skip link for keyboard/screen reader users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-md focus:font-bold"
+      >
+        Langsung ke konten utama
+      </a>
+
       <Navbar />
 
-      <div className="flex-1 overflow-hidden relative flex flex-col">
+      <main id="main-content" className="flex-1 overflow-hidden relative flex flex-col" role="main">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/excel-sort" element={<ExcelSort />} />
           <Route path="/excel-chart" element={<ExcelChart />} />
           <Route path="/word-tabulator" element={<WordTabulator />} />
-          {/* Blockly Simulations */}
-          <Route path="/blockly" element={<BlocklyPage />} />
-          <Route path="/blockly-maze" element={<BlocklyMaze />} />
+          {/* Lazy-loaded Heavy Components with Suspense */}
+          <Route path="/blockly" element={<Suspense fallback={<PageLoader />}><BlocklyPage /></Suspense>} />
+          <Route path="/blockly-maze" element={<Suspense fallback={<PageLoader />}><BlocklyMaze /></Suspense>} />
+          <Route path="/hardware" element={<Suspense fallback={<PageLoader />}><Hardware3D /></Suspense>} />
+          <Route path="/gerbang-logika" element={<Suspense fallback={<PageLoader />}><GerbangLogika /></Suspense>} />
 
-          <Route path="/hardware" element={<Hardware3D />} />
+          {/* Number Conversion */}
           <Route path="/biner" element={<Biner />} />
           <Route path="/oktal" element={<Oktal />} />
           <Route path="/heksadesimal" element={<Heksadesimal />} />
+
+          {/* System Simulations */}
           <Route path="/pemrosesan-data" element={<PemrosesanData />} />
           <Route path="/pengalamatan-memori" element={<PengalamatanMemori />} />
           <Route path="/integrasi-office" element={<IntegrasiOffice />} />
           <Route path="/explorer" element={<Explorer />} />
-          <Route path="/gerbang-logika" element={<GerbangLogika />} />
 
-          {/* Legacy routes if needed */}
+          {/* Office Simulations */}
           <Route path="/excel" element={<Excel />} />
           <Route path="/mailmerge" element={<MailMerger />} />
           <Route path="/word-paragraph" element={<WordParagraph />} />
           <Route path="/word-layout" element={<WordPageLayout />} />
         </Routes>
-      </div>
+      </main>
     </div>
   );
 };

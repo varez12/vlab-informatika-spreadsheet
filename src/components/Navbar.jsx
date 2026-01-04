@@ -37,6 +37,8 @@ const Navbar = () => {
             subItems: [
                 { label: 'Integrasi Office (Cut/Paste)', path: '/integrasi-office' },
                 { label: 'Microsoft Word (Mail Merge)', path: '/mailmerge' },
+                { label: 'Microsoft Word (Paragraf)', path: '/word-paragraph' },
+                { label: 'Microsoft Word (Layout)', path: '/word-layout' },
                 { label: 'Microsoft Word (Tabulator)', path: '/word-tabulator' },
                 { label: 'Microsoft Excel (Formula)', path: '/excel' },
                 { label: 'Microsoft Excel (Sorting)', path: '/excel-sort' },
@@ -59,7 +61,7 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="bg-slate-900 text-white shadow-lg z-50 sticky top-0">
+        <nav className="bg-slate-900 text-white shadow-lg z-50 sticky top-0" role="navigation" aria-label="Main navigation">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex justify-between h-16">
                     {/* Logo/Brand */}
@@ -87,6 +89,9 @@ const Navbar = () => {
                                     <button
                                         className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-800 ${item.subItems.some(sub => sub.path === location.pathname) ? 'text-blue-400 bg-slate-800' : 'text-slate-300'
                                             }`}
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        aria-label={`${item.label} menu`}
                                     >
                                         {item.icon}
                                         {item.label}
@@ -129,6 +134,9 @@ const Navbar = () => {
                         <button
                             onClick={() => setIsOpen(!isOpen)}
                             className="text-slate-300 hover:text-white p-2"
+                            aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={isOpen}
+                            aria-controls="mobile-menu"
                         >
                             {isOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
@@ -138,7 +146,7 @@ const Navbar = () => {
 
             {/* Mobile Menu */}
             {isOpen && (
-                <div className="md:hidden bg-slate-900 border-t border-slate-800 pb-4 animate-in slide-in-from-top-4 duration-200">
+                <div id="mobile-menu" className="md:hidden bg-slate-900 border-t border-slate-800 pb-4 animate-in slide-in-from-top-4 duration-200" role="menu">
                     <div className="px-2 pt-2 space-y-1">
                         {navItems.map((item, index) => (
                             <div key={index}>
