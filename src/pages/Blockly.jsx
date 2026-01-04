@@ -1,544 +1,604 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  Play, RotateCcw, ArrowUp, RotateCw, RotateCcw as RotateLeft,
-  Repeat, Trash2, CheckCircle2, Flag, Bot,
-  Trophy, Star, ChevronRight, Split, GitBranch,
-  Layers, Zap, Target, Navigation, Info, BookOpen, X, Sparkles,
-  Cpu, Code2, AlertCircle, Lightbulb, Rocket, Compass
+    Play,
+    RotateCcw,
+    Lightbulb,
+    Layers,
+    Cpu,
+    Code,
+    X,
+    Plus,
+    Trash2,
+    Zap,
+    Activity,
+    Eye,
+    Volume2,
+    VolumeX,
+    Infinity,
+    Moon,
+    Sun,
+    Square,
+    ZoomIn,
+    Search,
+    Menu
 } from 'lucide-react';
-import BlocklyRocket from './BlocklyRocket';
+
+// Konfigurasi Blok Tersedia
+const BLOCK_TYPES = {
+    START: { id: 'start', label: 'Mulai Program', color: 'bg-yellow-500', type: 'event' },
+    LOOP_5: { id: 'loop_5', label: 'Ulangi 5 Kali', color: 'bg-pink-500', type: 'control' },
+    FOREVER: { id: 'forever', label: 'Selamanya', color: 'bg-pink-600', type: 'control' },
+    IF_OFF: { id: 'if_off', label: 'Jika Lampu Mati', color: 'bg-blue-500', type: 'logic' },
+    IF_DARK: { id: 'if_dark', label: 'Jika Gelap', color: 'bg-indigo-500', type: 'logic' },
+    LED_ON: { id: 'led_on', label: 'Nyalakan Lampu', color: 'bg-green-500', type: 'action' },
+    LED_OFF: { id: 'led_off', label: 'Matikan Lampu', color: 'bg-red-500', type: 'action' },
+    BUZZER_ON: { id: 'buzzer_on', label: 'Bunyi Buzzer', color: 'bg-purple-500', type: 'action' },
+    BUZZER_OFF: { id: 'buzzer_off', label: 'Diam', color: 'bg-slate-500', type: 'action' },
+    WAIT: { id: 'wait', label: 'Tunggu 1 Detik', color: 'bg-orange-400', type: 'action' }
+};
 
 const Blockly = () => {
-  const [gameMode, setGameMode] = useState(null); // 'maze' or 'bird'
+    // --- State Management ---
+    const [workspace, setWorkspace] = useState([BLOCK_TYPES.START]);
+    const [isRunning, setIsRunning] = useState(false);
+    const [stopRequested, setStopRequested] = useState(false);
+    const [activeBlockIndex, setActiveBlockIndex] = useState(-1);
+    const [ledStatus, setLedStatus] = useState(false);
+    const [buzzerStatus, setBuzzerStatus] = useState(false);
+    const [isDark, setIsDark] = useState(false);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [zoomLevel, setZoomLevel] = useState(100);
+    const [viewMode, setViewMode] = useState('software');
+    const [currentLoopCount, setCurrentLoopCount] = useState(0);
+    const [showSidebar, setShowSidebar] = useState(false); // Mobile sidebar toggle
 
-  const levels = [
-    { id: 1, name: "Garis Lurus", maze: [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [1, 1, 1, 1, 1], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]], start: { x: 0, y: 2, dir: 0 }, target: { x: 4, y: 2 }, hint: "Bantu robot maju. Gunakan 'Ulangi sampai' agar efisien!" },
-    { id: 2, name: "Belokan Pertama", maze: [[0, 0, 0, 0, 0], [0, 0, 1, 1, 1], [0, 0, 1, 0, 0], [1, 1, 1, 0, 0], [0, 0, 0, 0, 0]], start: { x: 0, y: 3, dir: 0 }, target: { x: 4, y: 1 }, hint: "Belokkan robot sebelum menabrak dinding!" },
-    { id: 3, name: "Tangga Logika", maze: [[0, 0, 0, 1, 1], [0, 0, 1, 1, 0], [0, 1, 1, 0, 0], [1, 1, 0, 0, 0], [0, 0, 0, 0, 0]], start: { x: 0, y: 3, dir: 0 }, target: { x: 4, y: 0 }, hint: "Ada pola tangga. Gunakan perulangan!" },
-    { id: 4, name: "Sensor Dasar", maze: [[0, 0, 1, 1, 1], [0, 0, 1, 0, 0], [1, 1, 1, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]], start: { x: 0, y: 2, dir: 0 }, target: { x: 4, y: 0 }, hint: "Pakai blok 'Jika ada jalan' untuk mendeteksi belokan." },
-    { id: 5, name: "Labirin U", maze: [[1, 1, 1, 1, 1], [1, 0, 0, 0, 1], [1, 0, 1, 0, 1], [1, 0, 1, 0, 1], [1, 1, 1, 0, 0]], start: { x: 2, y: 2, dir: 3 }, target: { x: 0, y: 4 }, hint: "Kombinasikan Jika dan Belok!" },
-    { id: 6, name: "Zig-Zag Menengah", maze: [[1, 1, 0, 0, 0], [0, 1, 1, 0, 0], [0, 0, 1, 1, 0], [0, 0, 0, 1, 1], [0, 0, 0, 0, 1]], start: { x: 0, y: 0, dir: 1 }, target: { x: 4, y: 4 }, hint: "Gunakan logika If di dalam Repeat." },
-    { id: 7, name: "Persimpangan T", maze: [[1, 1, 1, 1, 1], [0, 0, 1, 0, 0], [0, 0, 1, 0, 0], [0, 0, 1, 0, 0], [0, 0, 1, 0, 0]], start: { x: 2, y: 4, dir: 3 }, target: { x: 0, y: 0 }, hint: "Kapan robot harus berhenti maju dan mulai belok?" },
-    { id: 8, name: "Algoritma Efisien", maze: [[1, 0, 0, 0, 0], [1, 1, 1, 1, 1], [0, 0, 0, 0, 1], [1, 1, 1, 1, 1], [1, 0, 0, 0, 0]], start: { x: 0, y: 4, dir: 3 }, target: { x: 0, y: 0 }, hint: "Gunakan 'Jika... lainnya' untuk jalur buntu." },
-    { id: 9, name: "Pencarian Jejak", maze: [[1, 1, 1, 0, 0], [1, 0, 1, 0, 0], [1, 1, 1, 1, 1], [0, 0, 1, 0, 1], [0, 0, 1, 1, 1]], start: { x: 4, y: 4, dir: 2 }, target: { x: 0, y: 0 }, hint: "Hati-hati, jalur ini cukup menjebak!" },
-    { id: 10, name: "The Grand Master", maze: [[1, 1, 1, 1, 1], [1, 0, 0, 0, 1], [1, 1, 1, 1, 1], [0, 0, 0, 0, 1], [1, 1, 1, 1, 1]], start: { x: 0, y: 4, dir: 0 }, target: { x: 0, y: 0 }, hint: "Level terakhir! Gabungkan Repeat, If, and Else." }
-  ];
+    // --- Audio Engine (Web Audio API) ---
+    const audioCtxRef = useRef(null);
+    const oscillatorRef = useRef(null);
 
-  const [currentLevelIdx, setCurrentLevelIdx] = useState(() => {
-    const saved = localStorage.getItem('blockly_level');
-    return saved ? parseInt(saved, 10) : 0;
-  });
-  const currentLevel = levels[currentLevelIdx];
-  const [robotPos, setRobotPos] = useState(currentLevel.start);
-  const [program, setProgram] = useState([]);
-  const [isRunning, setIsRunning] = useState(false);
-  const [currentStep, setCurrentStep] = useState(-1);
-  const [status, setStatus] = useState('idle');
-  const [message, setMessage] = useState(currentLevel.hint);
-  const [score, setScore] = useState(() => {
-    const savedScore = localStorage.getItem('blockly_score');
-    return savedScore ? parseInt(savedScore, 10) : 0;
-  });
+    const startBeep = () => {
+        try {
+            if (!audioCtxRef.current) {
+                audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+            }
 
-  const availableBlocks = [
-    { id: 'move', label: 'gerak maju', subLabel: 'move()', icon: <ArrowUp size={20} />, color: 'from-purple-600 to-purple-700 shadow-[0_4px_0_#6b21a8]' },
-    { id: 'turnLeft', label: 'belok kiri', subLabel: 'turnLeft()', icon: <RotateLeft size={20} />, color: 'from-purple-600 to-purple-700 shadow-[0_4px_0_#6b21a8]' },
-    { id: 'turnRight', label: 'belok kanan', subLabel: 'turnRight()', icon: <RotateCw size={20} />, color: 'from-purple-600 to-purple-700 shadow-[0_4px_0_#6b21a8]' },
-    { id: 'repeatUntil', label: 'ulangi sampai', subLabel: 'repeat(goal)', icon: <Repeat size={20} />, color: 'from-emerald-500 to-emerald-600 shadow-[0_4px_0_#059669]' },
-    { id: 'ifPathAhead', label: 'jika jalan di depan', subLabel: 'if(path)', icon: <Split size={20} />, color: 'from-blue-500 to-blue-600 shadow-[0_4px_0_#2563eb]' },
-    { id: 'ifElsePath', label: 'jika jalan... lainnya...', subLabel: 'if(path) else', icon: <GitBranch size={20} />, color: 'from-blue-500 to-blue-600 shadow-[0_4px_0_#2563eb]' },
-  ];
+            if (audioCtxRef.current.state === 'suspended') {
+                audioCtxRef.current.resume();
+            }
 
-  useEffect(() => {
-    resetSim();
-    setProgram([]);
-    localStorage.setItem('blockly_level', currentLevelIdx.toString());
-    localStorage.setItem('blockly_score', score.toString());
-  }, [currentLevelIdx, score]);
+            if (oscillatorRef.current) return;
 
-  const resetProgress = () => {
-    if (window.confirm('Yakin ingin mereset progress? Semua level dan skor akan kembali ke awal.')) {
-      localStorage.removeItem('blockly_level');
-      localStorage.removeItem('blockly_score');
-      setCurrentLevelIdx(0);
-      setScore(0);
-      window.location.reload();
-    }
-  };
+            const osc = audioCtxRef.current.createOscillator();
+            const gain = audioCtxRef.current.createGain();
 
-  const addBlock = (blockId) => {
-    if (isRunning) return;
-    const block = availableBlocks.find(b => b.id === blockId);
-    setProgram([...program, { ...block, instanceId: Date.now() }]);
-  };
+            osc.type = 'square'; // Suara khas buzzer elektronik
+            osc.frequency.setValueAtTime(880, audioCtxRef.current.currentTime); // Nada A5
 
-  const removeBlock = (index) => {
-    if (isRunning) return;
-    const newProgram = [...program];
-    newProgram.splice(index, 1);
-    setProgram(newProgram);
-  };
+            gain.gain.setValueAtTime(0.05, audioCtxRef.current.currentTime); // Volume rendah agar tidak mengejutkan
 
-  const resetSim = () => {
-    setRobotPos(currentLevel.start);
-    setIsRunning(false);
-    setCurrentStep(-1);
-    setStatus('idle');
-    setMessage(currentLevel.hint);
-  };
+            osc.connect(gain);
+            gain.connect(audioCtxRef.current.destination);
 
-  const checkPath = (pos, direction) => {
-    let checkX = pos.x; let checkY = pos.y;
-    if (direction === 0) checkX++; else if (direction === 1) checkY++; else if (direction === 2) checkX--; else if (direction === 3) checkY--;
-    if (checkX < 0 || checkX >= 5 || checkY < 0 || checkY >= 5) return false;
-    return currentLevel.maze[checkY][checkX] === 1;
-  };
-
-  const runProgram = async () => {
-    if (program.length === 0 || isRunning) return;
-    setIsRunning(true); setStatus('running');
-    let currentRobot = { ...currentLevel.start };
-    const hasLoop = program.some(b => b.id === 'repeatUntil');
-    let iterations = 0;
-    while (iterations < 80) {
-      iterations++;
-      for (let i = 0; i < program.length; i++) {
-        if (program[i].id === 'repeatUntil') continue;
-        setCurrentStep(i); const block = program[i];
-        if (block.id === 'ifElsePath') {
-          if (!checkPath(currentRobot, currentRobot.dir)) { i += 1; continue; }
+            osc.start();
+            oscillatorRef.current = osc;
+        } catch (e) {
+            console.error("Audio not supported", e);
         }
-        if (block.id === 'ifPathAhead') {
-          if (!checkPath(currentRobot, currentRobot.dir)) { i++; continue; }
+    };
+
+    const stopBeep = () => {
+        if (oscillatorRef.current) {
+            oscillatorRef.current.stop();
+            oscillatorRef.current.disconnect();
+            oscillatorRef.current = null;
+        }
+    };
+
+    // Sinkronisasi status buzzer dengan suara nyata
+    useEffect(() => {
+        if (buzzerStatus) {
+            startBeep();
+        } else {
+            stopBeep();
+        }
+        return () => stopBeep();
+    }, [buzzerStatus]);
+
+    // --- Logic & Simulation Engine ---
+
+    const executeAction = async (index, block) => {
+        if (stopRequested) return;
+        setActiveBlockIndex(index);
+        switch (block.id) {
+            case 'led_on': setLedStatus(true); break;
+            case 'led_off': setLedStatus(false); break;
+            case 'buzzer_on': setBuzzerStatus(true); break;
+            case 'buzzer_off': setBuzzerStatus(false); break;
+            case 'wait': await new Promise(r => setTimeout(r, 1000)); break;
+            default: break;
         }
         await new Promise(r => setTimeout(r, 400));
-        let nextX = currentRobot.x; let nextY = currentRobot.y;
-        if (block.id === 'move') {
-          if (currentRobot.dir === 0) nextX++; else if (currentRobot.dir === 1) nextY++; else if (currentRobot.dir === 2) nextX--; else if (currentRobot.dir === 3) nextY--;
-          if (nextX < 0 || nextX >= 5 || nextY < 0 || nextY >= 5 || currentLevel.maze[nextY][nextX] === 0) {
-            setStatus('crash'); setMessage("Robot menabrak tembok!"); setIsRunning(false); return;
-          }
-          currentRobot.x = nextX; currentRobot.y = nextY;
-        } else if (block.id === 'turnRight') currentRobot.dir = (currentRobot.dir + 1) % 4;
-        else if (block.id === 'turnLeft') currentRobot.dir = (currentRobot.dir + 3) % 4;
-        setRobotPos({ ...currentRobot });
-        if (currentRobot.x === currentLevel.target.x && currentRobot.y === currentLevel.target.y) {
-          setStatus('success'); const levelScore = Math.max(10, 100 - (program.length * 5));
-          setScore(prev => prev + levelScore); setMessage(`Sukses! +${levelScore} Poin.`);
-          setIsRunning(false); return;
+    };
+
+    const runSimulation = async () => {
+        if (isRunning) return;
+
+        // Resume audio context on user interaction (browser security)
+        if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+            audioCtxRef.current.resume();
         }
-      }
-      if (!hasLoop) break;
-    }
-    setIsRunning(false);
-  };
 
+        setIsRunning(true);
+        setStopRequested(false);
+        setCurrentLoopCount(0);
 
+        const runSequence = async () => {
+            let idx = 0;
+            while (idx < workspace.length && !stopRequested) {
+                const block = workspace[idx];
+                setActiveBlockIndex(idx);
 
-  if (gameMode === 'bird') {
-    return <BlocklyRocket onBack={() => setGameMode(null)} />;
-  }
+                if (block.id === 'start') {
+                    idx++;
+                }
+                else if (block.id === 'if_off') {
+                    await new Promise(r => setTimeout(r, 400));
+                    if (!ledStatus) idx++;
+                    else idx += 2;
+                }
+                else if (block.id === 'if_dark') {
+                    await new Promise(r => setTimeout(r, 400));
+                    if (isDark) idx++;
+                    else idx += 2;
+                }
+                else if (block.id === 'loop_5') {
+                    const subBlocks = workspace.slice(idx + 1);
+                    if (subBlocks.length === 0) idx++;
+                    else {
+                        for (let count = 1; count <= 5; count++) {
+                            if (stopRequested) break;
+                            setCurrentLoopCount(count);
+                            for (let j = 0; j < subBlocks.length; j++) {
+                                if (stopRequested) break;
+                                await executeAction(idx + 1 + j, subBlocks[j]);
+                            }
+                        }
+                        return;
+                    }
+                }
+                else if (block.id === 'forever') {
+                    const subBlocks = workspace.slice(idx + 1);
+                    if (subBlocks.length === 0) return;
+                    while (!stopRequested) {
+                        for (let j = 0; j < subBlocks.length; j++) {
+                            if (stopRequested) break;
+                            await executeAction(idx + 1 + j, subBlocks[j]);
+                        }
+                    }
+                    return;
+                }
+                else {
+                    await executeAction(idx, block);
+                    idx++;
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+        };
 
-  // MISSION SELECTOR SCREEN
-  if (!gameMode) {
+        await runSequence();
+
+        setActiveBlockIndex(-1);
+        setIsRunning(false);
+        setStopRequested(false);
+        setCurrentLoopCount(0);
+        setBuzzerStatus(false);
+        setLedStatus(false);
+    };
+
+    const stopSimulation = () => {
+        setStopRequested(true);
+        setLedStatus(false);
+        setBuzzerStatus(false);
+        stopBeep();
+    };
+
+    const addBlock = (blockType) => {
+        if (isRunning) return;
+        setWorkspace([...workspace, blockType]);
+    };
+
+    const removeBlock = (index) => {
+        if (isRunning || index === 0) return;
+        const newWs = [...workspace];
+        newWs.splice(index, 1);
+        setWorkspace(newWs);
+    };
+
+    const resetWorkspace = () => {
+        if (isRunning) return;
+        setWorkspace([BLOCK_TYPES.START]);
+        setLedStatus(false);
+        setBuzzerStatus(false);
+        setActiveBlockIndex(-1);
+    };
+
+    const renderBlock = (block, uniqueKey, index, isPalette = false) => {
+        const isActive = activeBlockIndex === index;
+
+        return (
+            <div
+                key={uniqueKey}
+                onClick={() => isPalette ? addBlock(block) : null}
+                className={`
+          relative flex items-center p-3 mb-2 rounded-lg cursor-pointer transition-all duration-300
+          ${block.color} text-white font-medium shadow-md border-b-4 border-black/20
+          ${isPalette ? 'hover:scale-105 active:scale-95' : 'w-full'}
+          ${isActive ? 'ring-4 ring-white animate-pulse scale-105 z-10 shadow-[0_0_20px_rgba(255,255,255,0.5)]' : ''}
+        `}
+                style={{ transform: !isPalette ? `scale(${zoomLevel / 100})` : 'none', transformOrigin: 'left' }}
+            >
+                <div className="mr-3 opacity-80">
+                    {block.type === 'control' && <Layers size={18} />}
+                    {block.type === 'action' && <Plus size={18} />}
+                    {block.type === 'event' && <Play size={18} />}
+                    {block.type === 'logic' && <Zap size={18} />}
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[8px] opacity-60 uppercase font-black tracking-widest leading-none mb-0.5">{block.type}</span>
+                    <span className="text-sm md:text-base select-none leading-none">{block.label}</span>
+                </div>
+
+                {!isPalette && index !== 0 && (
+                    <button
+                        onClick={(e) => { e.stopPropagation(); removeBlock(index); }}
+                        className="ml-auto p-1 hover:bg-black/10 rounded"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                )}
+
+                {!isPalette && (
+                    <div className="absolute -bottom-2 left-8 w-6 h-3 bg-inherit rounded-b-full border-b-4 border-black/10"></div>
+                )}
+            </div>
+        );
+    };
+
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#0b1021] flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-        <div className="absolute top-0 inset-x-0 h-96 bg-indigo-600/20 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="flex flex-col h-[calc(100vh-4rem)] bg-slate-50 text-slate-900 font-sans overflow-hidden">
 
-        <div className="max-w-4xl w-full z-10">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-              PILIH MISI
-            </h1>
-            <p className="text-slate-400 font-bold text-lg uppercase tracking-widest">Space Academy v2.0</p>
-          </div>
+            {/* MAIN CONTENT */}
+            <main className="flex-1 flex flex-col overflow-hidden">
 
-          <div className="grid md:grid-cols-2 gap-8 px-4">
-            {/* MISSION 1: MAZE */}
-            <button
-              onClick={() => setGameMode('maze')}
-              className="group relative bg-slate-800/50 backdrop-blur-md border-2 border-slate-700 hover:border-cyan-400 rounded-3xl p-8 transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(34,211,238,0.2)] text-left"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
-              <div className="bg-cyan-900/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border border-cyan-500/30 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
-                <Bot size={32} className="text-cyan-400 group-hover:text-white" />
-              </div>
-              <h3 className="text-2xl font-black text-white italic mb-2">MISI 1: MAZE RUNNER</h3>
-              <p className="text-slate-400 text-sm font-medium mb-6 leading-relaxed">
-                Pandu robot melewanti labirin menggunakan logika dasar: langkah, belokan, dan loop.
-              </p>
-              <div className="inline-flex items-center gap-2 text-cyan-400 font-bold text-xs uppercase tracking-widest bg-cyan-900/30 px-3 py-1 rounded-lg border border-cyan-500/20">
-                <Cpu size={14} /> Logic Grid
-              </div>
-            </button>
-
-            {/* MISSION 2: FLIGHT */}
-            <button
-              onClick={() => setGameMode('bird')}
-              className="group relative bg-slate-800/50 backdrop-blur-md border-2 border-slate-700 hover:border-purple-400 rounded-3xl p-8 transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(168,85,247,0.2)] text-left"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl"></div>
-              <div className="bg-purple-900/30 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border border-purple-500/30 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                <Compass size={32} className="text-purple-400 group-hover:text-white" />
-              </div>
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl font-black text-white italic mb-2">MISI 2: SPACE FLIGHT</h3>
-                <span className="bg-amber-500 text-black text-[10px] font-bold px-2 py-0.5 rounded uppercase">Baru</span>
-              </div>
-              <p className="text-slate-400 text-sm font-medium mb-6 leading-relaxed">
-                Terbangkan pesawat menggunakan sudut navigasi dan koordinat. Awas asteroid!
-              </p>
-              <div className="inline-flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-widest bg-purple-900/30 px-3 py-1 rounded-lg border border-purple-500/20">
-                <Navigation size={14} /> Angular Logic
-              </div>
-            </button>
-          </div>
-
-          <div className="mt-12 text-center">
-            <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">Pilih misi untuk memulai pelatihan</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-[#0b1021] to-[#1a1625] font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/30">
-
-      {/* SUCCESS MODAL OVERLAY */}
-      {status === 'success' && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-gradient-to-b from-slate-800 to-indigo-900 border-2 border-indigo-500/50 p-8 rounded-[2rem] shadow-2xl flex flex-col items-center text-center max-w-sm w-full relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute top-0 inset-x-0 h-32 bg-indigo-500/20 blur-3xl rounded-full -mt-16 pointer-events-none"></div>
-
-            <div className="mb-4 relative">
-              <div className="absolute inset-0 animate-ping bg-amber-400 rounded-full opacity-20"></div>
-              <Trophy size={64} className="text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] relative z-10" />
-            </div>
-
-            <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-2 drop-shadow-md">
-              Mission Complete!
-            </h2>
-            <p className="text-indigo-200 font-medium mb-6">
-              Hebat! Algoritamu berhasil membawa robot ke tujuan.
-            </p>
-
-            <div className="bg-black/30 rounded-xl p-4 w-full mb-6 border border-white/10">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs uppercase font-bold text-slate-400">Score Earned</span>
-                <span className="font-mono font-black text-amber-400 text-xl">+{Math.max(10, 100 - (program.length * 5))}</span>
-              </div>
-              <div className="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden">
-                <div className="bg-amber-400 h-full w-[80%]"></div>
-              </div>
-            </div>
-
-            {currentLevelIdx < levels.length - 1 ? (
-              <button
-                onClick={() => setCurrentLevelIdx(prev => prev + 1)}
-                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl font-black text-white text-lg hover:scale-[1.02] active:scale-95 transition-all shadow-lg border-b-4 border-emerald-800 uppercase tracking-widest flex items-center justify-center gap-2 group"
-              >
-                Level Selanjutnya <ChevronRight className="group-hover:translate-x-1 transition-transform" />
-              </button>
-            ) : (
-              <div className="p-4 bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-indigo-200 text-sm font-bold">
-                🎉 Selamat! Kamu telah menamatkan semua level!
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Game Status Bar */}
-      <div className="h-20 bg-slate-900/80 backdrop-blur-md border-b border-indigo-500/20 px-4 md:px-8 flex justify-between items-center z-50 flex-shrink-0 shadow-lg">
-        <div className="flex items-center gap-4 md:gap-6">
-          <div className="bg-indigo-600 p-2.5 rounded-xl shadow-lg border border-indigo-400/30 hidden md:block">
-            <Cpu size={24} className="text-white" />
-          </div>
-          <div>
-            <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-0.5 block">Current Mission</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-white italic tracking-tighter shadow-black drop-shadow-sm">LEVEL {currentLevel.id}</span>
-              <span className="text-slate-400 font-bold uppercase hidden md:inline-block border-l border-slate-700 pl-2 ml-2">{currentLevel.name}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 md:gap-6">
-          <div className="flex flex-col items-end mr-2">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Score</span>
-            <div className="flex items-center gap-2">
-              <Trophy size={18} className="text-amber-500" />
-              <span className="font-mono font-black text-2xl text-white tracking-tight">{score}</span>
-            </div>
-          </div>
-
-          <button onClick={resetProgress} className="p-3 bg-rose-900/40 hover:bg-rose-900/60 text-rose-400 border border-rose-800/50 rounded-xl transition-all shadow-sm active:scale-95" title="Reset Semua Progress">
-            <Trash2 size={20} />
-          </button>
-          <div className="w-px h-8 bg-white/10 mx-2"></div>
-          <button onClick={resetSim} className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 rounded-xl transition-all shadow-sm active:scale-95" title="Reset Level Ini">
-            <RotateCcw size={20} />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Layout */}
-      <main className="flex-1 flex flex-col lg:flex-row overflow-hidden p-3 md:p-6 gap-6 relative">
-
-        {/* Background Grid Pattern */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
-
-        {/* LEFT COLUMN: GAME PREVIEW & CONTROLS */}
-        <section className="order-1 lg:order-2 flex-none lg:flex-1 flex flex-col gap-4 min-h-[400px] lg:min-h-0 z-10">
-          <div className="flex-1 bg-slate-800/40 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-4 md:p-6 flex flex-col items-center justify-center relative overflow-hidden shadow-2xl ring-1 ring-white/5 group">
-
-            {/* Environment Decor */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] -ml-32 -mb-32 pointer-events-none"></div>
-
-            <div className="absolute top-4 left-6 flex items-center gap-2 opacity-60">
-              <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-300">Live Simulation</span>
-            </div>
-
-            <div className="w-full max-w-[280px] md:max-w-[320px] aspect-square p-2 relative">
-              <div className="absolute inset-0 bg-indigo-500/5 rounded-[2.5rem] transform rotate-3 scale-95 opacity-50"></div>
-              <div className="grid grid-cols-5 grid-rows-5 gap-2 md:gap-3 bg-slate-900/90 p-3 md:p-4 rounded-[2rem] shadow-2xl ring-1 ring-white/10 w-full h-full relative z-10">
-                {currentLevel.maze.map((row, y) => row.map((cell, x) => {
-                  const isTarget = x === currentLevel.target.x && y === currentLevel.target.y;
-                  const isRobot = robotPos.x === x && robotPos.y === y;
-                  return (
-                    <div key={`${x}-${y}`} className={`relative rounded-xl transition-all duration-300 aspect-square flex items-center justify-center ${cell === 1
-                      ? 'bg-slate-700/50 shadow-inner border border-white/5'
-                      : 'bg-slate-950/50 border border-transparent'
-                      }`}>
-                      {/* Grid Lines for Path */}
-                      {cell === 1 && <div className="absolute inset-2 border border-white/5 rounded-lg opacity-30"></div>}
-
-                      {isTarget && (
-                        <div className="relative w-full h-full flex items-center justify-center">
-                          <div className="absolute inset-0 bg-red-500/20 blur-md rounded-full animate-pulse"></div>
-                          <Target size={24} className="text-red-400 relative z-10 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] md:w-7 md:h-7" strokeWidth={2.5} />
+                {/* COMPACT TOOLBAR */}
+                <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-sm z-30 flex-shrink-0">
+                    <div className="flex items-center gap-4">
+                        <div className="bg-indigo-600 p-2 rounded-lg text-white">
+                            <Cpu size={20} />
                         </div>
-                      )}
-
-                      {isRobot && (
-                        <div className="absolute z-20 transition-all duration-500 ease-spring" style={{ transform: `rotate(${robotPos.dir * 90}deg)` }}>
-                          <div className="relative">
-                            <div className="absolute -inset-1 bg-cyan-400 blur-sm rounded-full opacity-40"></div>
-                            <div className="text-3xl md:text-4xl filter drop-shadow-lg">🚀</div>
-                          </div>
+                        <div>
+                            <h1 className="font-bold text-sm text-slate-800">Blockly IoT Simulator</h1>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">LED & Buzzer Control</p>
                         </div>
-                      )}
                     </div>
-                  );
-                }))}
-              </div>
-            </div>
 
-            {/* Status Feedback */}
-            <div className={`mt-4 px-5 py-2.5 rounded-2xl border flex items-center gap-3 font-bold text-[10px] md:text-xs uppercase tracking-widest transition-all duration-300 w-full max-w-[320px] shadow-lg flex-shrink-0 ${status === 'success' ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' :
-              status === 'crash' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-shake' : 'bg-slate-900/50 border-white/10 text-slate-400'
-              }`}>
-              {status === 'crash' && <AlertCircle size={16} />}
-              {status === 'success' && <CheckCircle2 size={16} />}
-              {status === 'running' && <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>}
-              <span className="truncate flex-1 text-center">{message}</span>
-            </div>
-          </div>
+                    <nav className="hidden md:flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+                        <button
+                            onClick={() => setViewMode('software')}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-black transition-all uppercase ${viewMode === 'software' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:bg-slate-200'}`}
+                        >
+                            <Layers size={12} /> Coding
+                        </button>
+                        <button
+                            onClick={() => setViewMode('hardware')}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-black transition-all uppercase ${viewMode === 'hardware' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:bg-slate-200'}`}
+                        >
+                            <Cpu size={12} /> Hardware
+                        </button>
+                    </nav>
 
-          {/* RUN BUTTON */}
-          <button
-            onClick={runProgram}
-            disabled={isRunning || program.length === 0}
-            className="h-16 w-full bg-gradient-to-r from-cyan-600 to-blue-700 hover:from-cyan-500 hover:to-blue-600 text-white rounded-2xl font-black text-sm md:text-base flex items-center justify-center gap-4 hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-[0.98] disabled:bg-none disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all border-b-4 border-blue-900 uppercase tracking-[0.15em] relative overflow-hidden group z-10"
-          >
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            <Play size={24} fill="currentColor" className="group-hover:scale-110 transition-transform" />
-            {isRunning ? 'SYSTEM RUNNING...' : 'EKSEKUSI PROGRAM'}
-          </button>
-        </section>
-
-        {/* MIDDLE COLUMN: WORKSPACE */}
-        <section className="order-2 lg:order-3 flex-none lg:flex-[1.4] flex flex-col md:flex-row gap-4 min-h-[500px] lg:min-h-0 z-10">
-
-          {/* TOOLBOX */}
-          <aside className="w-full md:w-48 bg-slate-800/60 backdrop-blur-xl rounded-v-xl md:rounded-[2rem] border border-white/10 flex flex-col overflow-hidden shadow-2xl flex-shrink-0">
-            <div className="p-4 border-b border-white/5 bg-white/5 text-center">
-              <h3 className="text-xs font-black text-cyan-400 uppercase tracking-widest">Command Center</h3>
-            </div>
-            <div className="flex-1 overflow-x-auto md:overflow-y-auto p-3 flex md:flex-col gap-3 custom-scrollbar">
-              {availableBlocks.map(block => (
-                <button
-                  key={block.id}
-                  onClick={() => addBlock(block.id)}
-                  disabled={isRunning}
-                  className={`min-w-[140px] md:min-w-0 w-full group relative overflow-hidden bg-gradient-to-br ${block.color} p-3 rounded-2xl border-2 border-white/10 hover:border-white/40 shadow-lg active:scale-95 transition-all text-left flex items-center gap-3 flex-shrink-0`}
-                >
-                  <div className="bg-black/20 p-2 rounded-lg group-hover:bg-black/10 transition-colors">
-                    {block.icon}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] md:text-xs font-black text-white uppercase leading-tight tracking-wide drop-shadow-md">
-                      {block.label}
-                    </span>
-                    <span className="text-[8px] md:text-[9px] font-mono text-white/70 normal-case opacity-0 group-hover:opacity-100 transition-opacity">
-                      {block.subLabel}
-                    </span>
-                  </div>
-                </button>
-              ))}
-
-              <div className="mt-4 p-3 bg-indigo-900/30 rounded-xl border border-indigo-500/30">
-                <div className="flex items-center gap-2 mb-2 text-indigo-300">
-                  <Lightbulb size={14} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Mission Hint</span>
+                    <div className="flex items-center gap-2">
+                        {isRunning ? (
+                            <button
+                                onClick={stopSimulation}
+                                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs transition-all shadow-lg animate-pulse"
+                            >
+                                <Square size={14} fill="currentColor" /> STOP
+                            </button>
+                        ) : (
+                            <button
+                                onClick={runSimulation}
+                                className="flex items-center gap-2 px-6 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-black text-xs transition-all shadow-lg"
+                            >
+                                <Play size={14} fill="currentColor" /> JALANKAN
+                            </button>
+                        )}
+                    </div>
                 </div>
-                <p className="text-[11px] text-indigo-200 leading-relaxed font-medium">
-                  {currentLevel.hint}
-                </p>
-              </div>
-            </div>
-          </aside>
 
-          {/* CODE EDITOR WORKSPACE */}
-          <aside className="flex-1 bg-slate-900/80 backdrop-blur-xl rounded-[2rem] border-2 border-white/10 flex flex-col overflow-hidden shadow-inner relative group">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/graphy.png')] opacity-10 pointer-events-none"></div>
+                {/* WORKSPACE CONTAINER */}
+                <div className="flex-1 flex overflow-hidden relative">
 
-            <div className="p-4 border-b border-white/5 bg-white/[0.02] flex justify-between items-center relative z-10">
-              <div>
-                <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
-                  <Code2 size={16} className="text-purple-400" /> Main Algorithm
-                </h3>
-                <p className="text-[10px] text-slate-500 font-mono mt-1">{program.length} Blocks Used</p>
-              </div>
-              <button
-                onClick={() => setProgram([])}
-                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold rounded-lg border border-rose-500/30 flex items-center gap-2 transition-all"
-                title="Clear All"
-              >
-                <Trash2 size={14} /> Clear
-              </button>
-            </div>
+                    {/* Mobile Sidebar Toggle Button */}
+                    <button
+                        onClick={() => setShowSidebar(true)}
+                        className="md:hidden fixed bottom-24 left-4 z-40 w-12 h-12 bg-indigo-600 text-white rounded-xl shadow-lg flex items-center justify-center"
+                    >
+                        <Plus size={24} />
+                    </button>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar relative z-10">
-              {program.length === 0 && (
-                <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4 opacity-50">
-                  <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center border-2 border-dashed border-slate-600">
-                    <Bot size={32} />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-widest">Drag commands here</p>
-                </div>
-              )}
-
-              {program.map((block, idx) => {
-                const isIndented = program.some((b, i) => b.id === 'repeatUntil' && i < idx) || (idx > 0 && (program[idx - 1].id === 'ifPathAhead' || program[idx - 1].id === 'ifElsePath'));
-                const isActive = currentStep === idx;
-
-                return (
-                  <div key={block.instanceId} className="relative group/block animate-in slide-in-from-left-2 duration-300">
-                    {/* Connector Line for Indentation */}
-                    {isIndented && (
-                      <div className="absolute left-[-12px] top-[-10px] bottom-6 w-4 border-l-2 border-b-2 border-slate-700/50 rounded-bl-xl pointer-events-none"></div>
+                    {/* Mobile Overlay */}
+                    {showSidebar && (
+                        <div
+                            onClick={() => setShowSidebar(false)}
+                            className="md:hidden fixed inset-0 bg-black/50 z-40"
+                        />
                     )}
 
-                    <div className={`
-                        relative flex items-center gap-3 p-3 rounded-md shadow-sm transition-all duration-200
-                        bg-gradient-to-r ${block.color} 
-                        ${isActive ? 'ring-2 ring-white scale-[1.02] brightness-125 z-10' : 'opacity-90 hover:opacity-100 hover:translate-x-1'}
-                      `} style={{ marginLeft: isIndented ? '24px' : '0' }}>
+                    {/* SIDEBAR PALETTE - Drawer on mobile, static on desktop */}
+                    <aside className={`
+                        fixed md:relative inset-y-0 left-0 z-50
+                        w-72 md:w-80 bg-white border-r border-slate-200 
+                        p-4 md:p-6 flex flex-col gap-6 md:gap-8 shadow-lg md:shadow-sm overflow-y-auto
+                        transform transition-transform duration-300 ease-out
+                        ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                    `}>
 
-                      <div className="flex items-center justify-center w-6 h-6 bg-black/20 rounded-lg text-white/50 text-[10px] font-mono font-bold">
-                        {idx + 1}
-                      </div>
+                        <div className="flex flex-col gap-6">
+                            <div>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <Layers size={12} className="text-pink-500" /> Kontrol Alur
+                                </h3>
+                                <div className="space-y-1">
+                                    {renderBlock(BLOCK_TYPES.LOOP_5, `p-loop5`, 0, true)}
+                                    {renderBlock(BLOCK_TYPES.FOREVER, `p-forever`, 0, true)}
+                                </div>
+                            </div>
 
-                      <div className="text-white/90">
-                        {block.icon}
-                      </div>
+                            <div>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <Zap size={12} className="text-blue-500" /> Logika Sensor
+                                </h3>
+                                <div className="space-y-1">
+                                    {renderBlock(BLOCK_TYPES.IF_OFF, `p-ifoff`, 0, true)}
+                                    {renderBlock(BLOCK_TYPES.IF_DARK, `p-ifdark`, 0, true)}
+                                </div>
+                            </div>
 
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <span className="font-bold text-xs text-white uppercase tracking-wide drop-shadow-md truncate">
-                          {block.label}
-                        </span>
-                        <span className="text-[9px] font-mono text-white/80 normal-case truncate">
-                          {block.subLabel}
-                        </span>
-                      </div>
+                            <div>
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                                    <Cpu size={12} className="text-green-500" /> Aksi Output
+                                </h3>
+                                <div className="space-y-1">
+                                    {renderBlock(BLOCK_TYPES.LED_ON, `p-on`, 0, true)}
+                                    {renderBlock(BLOCK_TYPES.LED_OFF, `p-off`, 0, true)}
+                                    {renderBlock(BLOCK_TYPES.BUZZER_ON, `p-bon`, 0, true)}
+                                    {renderBlock(BLOCK_TYPES.BUZZER_OFF, `p-boff`, 0, true)}
+                                    {renderBlock(BLOCK_TYPES.WAIT, `p-wait`, 0, true)}
+                                </div>
+                            </div>
+                        </div>
 
-                      <button
-                        onClick={() => removeBlock(idx)}
-                        className="opacity-0 group-hover/block:opacity-100 p-1.5 bg-black/20 hover:bg-black/40 rounded-lg text-white transition-all"
-                      >
-                        <X size={14} />
-                      </button>
+                        <div className="mt-auto border-t pt-4 md:pt-6">
+                            {/* Mobile Close Button */}
+                            <button
+                                onClick={() => setShowSidebar(false)}
+                                className="md:hidden w-full mb-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold uppercase flex items-center justify-center gap-2"
+                            >
+                                <X size={14} /> Tutup Menu
+                            </button>
+                            <div className="mb-4 flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Environment</span>
+                                <button
+                                    onClick={() => setIsDark(!isDark)}
+                                    className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black transition-all ${isDark ? 'bg-indigo-600 text-white' : 'bg-yellow-400 text-yellow-900'}`}
+                                >
+                                    {isDark ? <><Moon size={12} /> GELAP</> : <><Sun size={12} /> TERANG</>}
+                                </button>
+                            </div>
+                            <button
+                                onClick={resetWorkspace}
+                                className="w-full py-3 bg-slate-100 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all text-[10px] font-black uppercase tracking-[0.1em] border border-slate-200"
+                            >
+                                Bersihkan Papan
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* WORKSPACE AREA */}
+                    <section className={`flex-1 relative overflow-hidden transition-all duration-700 ${viewMode === 'hardware' ? 'bg-slate-900' : 'bg-slate-100'}`}>
+
+                        {/* LIVE MINI MONITOR */}
+                        {viewMode === 'software' && (
+                            <div className="absolute top-8 right-8 z-20 flex flex-col gap-4 pointer-events-none">
+                                <div className="bg-white/90 backdrop-blur shadow-2xl p-5 rounded-[2rem] border-2 border-slate-200 flex flex-col items-center gap-4 min-w-[120px]">
+                                    <div className="flex items-center gap-2 px-2 py-0.5 bg-slate-100 rounded-full">
+                                        <Activity size={10} className="text-indigo-600" />
+                                        <span className="text-[9px] font-black text-slate-500 uppercase">Live Output</span>
+                                    </div>
+
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className={`w-10 h-10 rounded-full transition-all duration-500 ${ledStatus ? 'bg-green-500 shadow-[0_0_20px_rgba(34,197,94,0.6)]' : 'bg-slate-200 shadow-inner'}`}></div>
+                                        <span className="text-[8px] font-black text-slate-400">LED</span>
+                                    </div>
+
+                                    <div className="flex flex-col items-center gap-1">
+                                        <div className={`w-10 h-10 rounded-lg transition-all duration-300 flex items-center justify-center ${buzzerStatus ? 'bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.6)] animate-pulse' : 'bg-slate-200'}`}>
+                                            <Volume2 size={16} className={buzzerStatus ? 'text-white' : 'text-slate-400'} />
+                                        </div>
+                                        <span className="text-[8px] font-black text-slate-400">BUZZER</span>
+                                    </div>
+                                </div>
+
+                                {isRunning && (
+                                    <div className="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl border border-white/20 flex flex-col gap-1 items-center">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-red-500 animate-ping"></div>
+                                            <span className="text-[10px] font-black tracking-widest uppercase">Running</span>
+                                        </div>
+                                        {currentLoopCount > 0 && <span className="text-[9px] font-bold text-pink-400 uppercase italic tracking-tighter">Loop: {currentLoopCount} / 5</span>}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {viewMode === 'software' && (
+                            <div className="h-full w-full overflow-auto p-12 flex justify-center">
+                                <div className="w-full max-w-lg min-h-fit bg-white border-2 border-slate-200 rounded-[3.5rem] p-12 shadow-2xl relative mb-20 self-start">
+                                    <div className="absolute top-10 left-1/2 -translate-x-1/2 w-32 h-2 bg-slate-100 rounded-full"></div>
+
+                                    <div className="mt-10 space-y-1">
+                                        {workspace.map((block, idx) => renderBlock(block, `ws-${idx}-${block.id}`, idx))}
+                                    </div>
+
+                                    {workspace.length === 1 && (
+                                        <div className="mt-20 text-center p-16 border-4 border-dashed border-slate-100 rounded-[3rem] bg-slate-50/50">
+                                            <p className="text-slate-300 text-sm font-black uppercase tracking-[0.2em] leading-loose">
+                                                Tambahkan blok perintah<br />untuk memulai simulasi
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {viewMode === 'hardware' && (
+                            <div className="h-full flex flex-col items-center justify-center relative">
+                                <div className={`absolute inset-0 transition-opacity duration-1000 ${isDark ? 'bg-indigo-950/60 opacity-100' : 'bg-transparent opacity-0 pointer-events-none'}`}></div>
+
+                                <div className="flex gap-16 items-center z-10 scale-110">
+                                    <div className="flex flex-col items-center gap-6">
+                                        <div className="relative">
+                                            <div className={`w-40 h-40 rounded-full blur-[80px] transition-all duration-700 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${ledStatus ? 'bg-green-400 opacity-50 scale-150' : 'bg-transparent opacity-0'}`}></div>
+                                            <div className="relative bg-slate-800 border-[8px] border-slate-700 p-10 rounded-[4rem] shadow-2xl flex flex-col items-center">
+                                                <div className={`w-16 h-24 rounded-t-full border-t-2 border-x-2 transition-all duration-500 ${ledStatus ? 'bg-green-500 border-green-300 shadow-[0_0_60px_rgba(34,197,94,1)]' : 'bg-slate-700 border-slate-600'}`}></div>
+                                                <div className="w-20 h-6 bg-slate-600 rounded-md -mt-1 shadow-inner"></div>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">LED Module</span>
+                                    </div>
+
+                                    <div className="flex flex-col items-center gap-6">
+                                        <div className="relative">
+                                            {buzzerStatus && (
+                                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                                    <div className="w-32 h-32 border-2 border-purple-500/30 rounded-full animate-ping"></div>
+                                                </div>
+                                            )}
+                                            <div className={`relative bg-slate-800 border-[8px] border-slate-700 p-10 rounded-full shadow-2xl flex items-center justify-center transition-transform ${buzzerStatus ? 'animate-[bounce_0.2s_infinite]' : ''}`}>
+                                                <div className="w-24 h-24 bg-slate-900 rounded-full border-4 border-slate-700 flex items-center justify-center shadow-inner">
+                                                    <div className="w-8 h-8 bg-slate-800 rounded-full border-2 border-slate-700"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase">Buzzer</span>
+                                    </div>
+                                </div>
+
+                                <div className="mt-20 flex gap-8 z-10">
+                                    <div className={`px-8 py-3 rounded-2xl text-[10px] font-black tracking-widest shadow-xl border-2 transition-all ${ledStatus ? 'bg-green-600 border-green-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                        LED: {ledStatus ? 'ON' : 'OFF'}
+                                    </div>
+                                    <div className={`px-8 py-3 rounded-2xl text-[10px] font-black tracking-widest shadow-xl border-2 transition-all ${buzzerStatus ? 'bg-purple-600 border-purple-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                                        ALARM: {buzzerStatus ? 'ON' : 'OFF'}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </section>
+                </div>
+            </main>
+
+            {/* FOOTER BAR */}
+            <footer className="bg-white border-t border-slate-200 px-8 py-3 flex items-center justify-between z-40">
+                <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isRunning ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></div>
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Informatika Sim-Engine v4.2</span>
                     </div>
-                  </div>
-                );
-              })}
+                </div>
 
-              {/* Spacer block to allow scrolling past bottom */}
-              <div className="h-12"></div>
+                <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-200">
+                        <ZoomIn size={12} className="text-slate-400" />
+                        <input
+                            type="range" min="60" max="140" value={zoomLevel}
+                            onChange={(e) => setZoomLevel(e.target.value)}
+                            className="w-24 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <span className="text-[10px] font-mono text-slate-400 w-8">{zoomLevel}%</span>
+                    </div>
+                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] italic underline underline-offset-4 decoration-indigo-200">Audio Enabled Engine</p>
+                </div>
+            </footer>
+
+            {/* BANTUAN TRIGGER - Bottom Right */}
+            <button
+                onClick={() => setIsDrawerOpen(true)}
+                className="fixed bottom-24 right-8 px-4 py-3 bg-indigo-600 text-white rounded-2xl shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all z-50 text-xs font-black uppercase tracking-wider"
+            >
+                <Lightbulb size={16} /> Panduan Blok
+            </button>
+
+            {/* DRAWER BANTUAN - From Right */}
+            <div className={`fixed inset-y-0 right-0 w-[380px] bg-white shadow-2xl z-[60] transform transition-transform duration-500 ease-out border-l border-slate-200 ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="h-full flex flex-col">
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50">
+                        <div>
+                            <h2 className="font-black text-lg text-slate-800 uppercase tracking-tight">Panduan Blok</h2>
+                            <p className="text-[10px] text-slate-500 font-bold">Penjelasan setiap blok perintah</p>
+                        </div>
+                        <button onClick={() => setIsDrawerOpen(false)} className="p-2 hover:bg-white rounded-xl transition-colors"><X size={20} /></button>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                        {/* Control Blocks */}
+                        <div className="bg-pink-50 p-4 rounded-xl border border-pink-100">
+                            <h4 className="text-[10px] font-black text-pink-600 uppercase tracking-widest mb-3 flex items-center gap-2"><Layers size={12} /> Kontrol Alur</h4>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><b className="text-pink-500">Ulangi 5 Kali:</b> Menjalankan blok di bawahnya sebanyak 5 kali.</p>
+                                <p><b className="text-pink-600">Selamanya:</b> Menjalankan blok di bawahnya tanpa berhenti (loop tak terbatas).</p>
+                            </div>
+                        </div>
+
+                        {/* Logic Blocks */}
+                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2"><Zap size={12} /> Logika Sensor</h4>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><b className="text-blue-500">Jika Lampu Mati:</b> Cek apakah LED sedang OFF. Jika ya, jalankan blok selanjutnya.</p>
+                                <p><b className="text-indigo-500">Jika Gelap:</b> Cek environment. Gunakan tombol Terang/Gelap di sidebar untuk mengubahnya.</p>
+                            </div>
+                        </div>
+
+                        {/* Action Blocks */}
+                        <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                            <h4 className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-3 flex items-center gap-2"><Cpu size={12} /> Aksi Output</h4>
+                            <div className="space-y-2 text-xs text-slate-600">
+                                <p><b className="text-green-500">Nyalakan Lampu:</b> Mengubah status LED menjadi ON (hijau).</p>
+                                <p><b className="text-red-500">Matikan Lampu:</b> Mengubah status LED menjadi OFF.</p>
+                                <p><b className="text-purple-500">Bunyi Buzzer:</b> Membunyikan alarm (ada suara nyata!).</p>
+                                <p><b className="text-slate-500">Diam:</b> Mematikan buzzer.</p>
+                                <p><b className="text-orange-500">Tunggu 1 Detik:</b> Jeda eksekusi selama 1 detik.</p>
+                            </div>
+                        </div>
+
+                        {/* Audio Info */}
+                        <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                            <h4 className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-2 flex items-center gap-2"><Volume2 size={12} /> Info Suara</h4>
+                            <p className="text-xs leading-relaxed text-purple-700">Buzzer memiliki suara nyata! Pastikan volume perangkat Anda aktif untuk mendengar efek 'pip'.</p>
+                        </div>
+                    </div>
+
+                    <div className="p-6 border-t border-slate-100">
+                        <button onClick={() => setIsDrawerOpen(false)} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition-colors">Tutup Panduan</button>
+                    </div>
+                </div>
             </div>
-          </aside>
-        </section>
 
-        {/* SECTION 3: RULES & SCORING (BOTTOM on Mobile) */}
-        <section className="order-3 lg:order-1 flex-none lg:flex-[0.6] bg-[#0f1219]/60 backdrop-blur-md rounded-[2rem] border border-white/5 flex flex-col overflow-hidden shadow-2xl min-h-[250px] lg:min-h-0">
-          <div className="p-4 border-b border-white/5 bg-blue-600/10 flex items-center gap-3">
-            <BookOpen size={18} className="text-blue-400" />
-            <h3 className="text-[10px] md:text-[11px] font-black text-white uppercase tracking-widest">Aturan Misi</h3>
-          </div>
-
-          <div className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar">
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Trophy size={14} className="text-amber-400" />
-                <span className="text-[9px] font-black text-white uppercase tracking-tighter">Sistem Penilaian:</span>
-              </div>
-              <ul className="text-slate-400 text-[9px] leading-relaxed font-medium list-disc ml-3 space-y-1">
-                <li>Skor Maksimal: <b className="text-white">100 Poin</b>.</li>
-                <li>Setiap blok mengurangi <b className="text-rose-400">-5 Poin</b>.</li>
-                <li>Semakin sedikit blok, semakin tinggi nilaimu!</li>
-              </ul>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Lightbulb size={12} className="text-amber-400" />
-                <span className="text-[9px] font-black text-white uppercase tracking-tighter">Tips:</span>
-              </div>
-              <p className="text-slate-400 text-[8px] font-bold italic leading-tight uppercase">
-                Gunakan logika yang efisien untuk mendapatkan skor 100!
-              </p>
-            </div>
-          </div>
-        </section>
-
-      </main>
-
-      {/* Global Styles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.3); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.5); }
-        
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
-        }
-        .animate-shake { animation: shake 0.4s ease-in-out; }
-      ` }} />
-    </div>
-  );
+            {isDrawerOpen && <div onClick={() => setIsDrawerOpen(false)} className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50"></div>}
+        </div>
+    );
 };
 
 export default Blockly;

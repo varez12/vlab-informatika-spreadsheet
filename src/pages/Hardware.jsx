@@ -71,7 +71,7 @@ export default function Hardware() {
     const [selected, setSelected] = useState('Memory');
 
     return (
-        <div className="w-full h-screen bg-[#050510] relative flex flex-col">
+        <div className="w-full h-full bg-[#050510] relative flex flex-col">
 
 
             <Canvas dpr={[1, 2]} camera={{ fov: 45, position: [0, 0, 5] }}>
