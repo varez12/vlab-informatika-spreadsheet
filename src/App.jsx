@@ -9,6 +9,8 @@ import WordPageLayout from './pages/WordPageLayout';
 import WordTabulator from './pages/WordTabulator';
 import ExcelChart from "./pages/ExcelChart";
 import ExcelSort from './pages/ExcelSort';
+import ExcelBasic from './pages/ExcelBasic';
+import ExcelText from './pages/ExcelText';
 import Biner from './pages/Biner';
 import Oktal from './pages/Oktal';
 import Heksadesimal from './pages/Heksadesimal';
@@ -79,6 +81,8 @@ const AppContent = () => {
 
           {/* Office Simulations */}
           <Route path="/excel" element={<Excel />} />
+          <Route path="/excel-basic" element={<ExcelBasic />} />
+          <Route path="/excel-text" element={<ExcelText />} />
           <Route path="/mailmerge" element={<MailMerger />} />
           <Route path="/word-paragraph" element={<WordParagraph />} />
           <Route path="/word-layout" element={<WordPageLayout />} />
