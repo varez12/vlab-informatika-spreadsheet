@@ -40,7 +40,9 @@ const Navbar = () => {
                 { label: 'Microsoft Word (Paragraf)', path: '/word-paragraph' },
                 { label: 'Microsoft Word (Layout)', path: '/word-layout' },
                 { label: 'Microsoft Word (Tabulator)', path: '/word-tabulator' },
-                { label: 'Microsoft Excel (Formula)', path: '/excel' },
+                { label: 'Microsoft Excel (Formula Dasar)', path: '/excel-basic' },
+                { label: 'Microsoft Excel (Formula Teks)', path: '/excel-text' },
+                { label: 'Microsoft Excel (Lookup)', path: '/excel' },
                 { label: 'Microsoft Excel (Sorting)', path: '/excel-sort' },
                 { label: 'Microsoft Excel (Chart)', path: '/excel-chart' },
             ]
