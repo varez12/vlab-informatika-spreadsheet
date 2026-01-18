@@ -16,7 +16,6 @@ import {
     PauseCircle,
     Plus,
     Cpu,
-    Cpu,
     ArrowRight
 } from 'lucide-react';
 import QuizMode, { numberConversionQuizQuestions } from '../components/QuizMode';

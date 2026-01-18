@@ -22,8 +22,6 @@ import {
     ArrowUp,
     ArrowDown,
     ChevronDown,
-    ArrowDown,
-    ChevronDown,
     Menu,
     Trophy
 } from 'lucide-react';

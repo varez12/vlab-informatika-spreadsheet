@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Cpu, ArrowRight, FileText, Database, Layers, ArrowDown, Grid, Zap, Search, Save, RefreshCw, Calculator, Trophy } from 'lucide-react';
+import { Cpu, ArrowRight, FileText, Database, Layers, ArrowDown, Grid, Zap, Search, Save, RefreshCw, Calculator, Trophy, Activity } from 'lucide-react';
 import QuizMode, { memoryQuizQuestions } from '../components/QuizMode';
 
 const PengalamatanMemori = () => {
@@ -19,7 +19,8 @@ const PengalamatanMemori = () => {
     // CACHE STATE
     const [cache, setCache] = useState(Array(4).fill({ valid: false, tag: null, data: null, dirty: false }));
     const [cacheStats, setCacheStats] = useState({ hits: 0, misses: 0, total: 0 });
-    const [lastAccess, setLastAccess] = useState({ type: null, msg: "System Ready", status: 'idle' });
+    const [lastAccess, setLastAccess] = useState({ type: null, msg: "System Ready", status: 'idle', explanation: '' });
+    const [busAnimation, setBusAnimation] = useState(null); // 'ram-to-cache', 'cache-to-cpu', 'cpu-to-cache'
 
     // MANUAL ACCESS STATE
     const [activeTab, setActiveTab] = useState('stream'); // 'stream' or 'manual'
@@ -111,7 +112,18 @@ const PengalamatanMemori = () => {
 
             // Update Cache (Write Allocate)
             newCache[cacheIndex] = { valid: true, tag: tag, data: data, dirty: true };
-            setLastAccess({ type: 'WRITE', msg: hit ? `CACHE HIT! Write to L1 [${cacheIndex}]` : `CACHE MISS! Write alloc [${cacheIndex}]`, status: hit ? 'hit' : 'miss' });
+
+            setBusAnimation('cpu-to-cache');
+            setTimeout(() => setBusAnimation(null), 1000);
+
+            setLastAccess({
+                type: 'WRITE',
+                msg: hit ? `CACHE HIT! Write to L1 [${cacheIndex}]` : `CACHE MISS! Write alloc [${cacheIndex}]`,
+                status: hit ? 'hit' : 'miss',
+                explanation: hit
+                    ? `Data ditemukan di Cache Line ${cacheIndex}. CPU memperbarui data di Cache dan RAM (Write-Through) untuk menjaga konsistensi.`
+                    : `Data tidak ada di Cache (Miss). CPU menulis ke RAM lalu menyalinnya ke Cache Line ${cacheIndex} agar akses berikutnya lebih cepat.`
+            });
 
         } else {
             // READ
@@ -119,9 +131,26 @@ const PengalamatanMemori = () => {
                 // Fetch from RAM
                 const memVal = memory[linearIdx] || "00000000";
                 newCache[cacheIndex] = { valid: true, tag: tag, data: memVal, dirty: false };
-                setLastAccess({ type: 'READ', msg: `MISS! Fetch RAM [${toHex(seg)}:${toHex(off)}]`, status: 'miss' });
+
+                setBusAnimation('ram-to-cache');
+                setTimeout(() => setBusAnimation(null), 1000);
+
+                setLastAccess({
+                    type: 'READ',
+                    msg: `MISS! Fetch RAM [${toHex(seg)}:${toHex(off)}]`,
+                    status: 'miss',
+                    explanation: `Data tidak ditemukan di Cache (Miss). CPU harus mengambil data dari RAM (Lambat) di alamat ${toHex(seg)}:${toHex(off)} dan menyimpannya ke Cache Line ${cacheIndex}.`
+                });
             } else {
-                setLastAccess({ type: 'READ', msg: `HIT! Read L1 Cache [${cacheIndex}]`, status: 'hit' });
+                setBusAnimation('cache-to-cpu');
+                setTimeout(() => setBusAnimation(null), 1000);
+
+                setLastAccess({
+                    type: 'READ',
+                    msg: `HIT! Read L1 Cache [${cacheIndex}]`,
+                    status: 'hit',
+                    explanation: `Data ditemukan di Cache Line ${cacheIndex} (Hit)! CPU membaca langsung dari Cache (Cepat) tanpa perlu mengakses RAM.`
+                });
             }
         }
 
@@ -279,12 +308,20 @@ const PengalamatanMemori = () => {
                                     </div>
 
                                     {/* Operation Log */}
-                                    <div className={`p-3 rounded border text-[10px] font-mono leading-tight ${lastAccess.status === 'hit' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
+                                    <div className={`p-3 rounded border text-[10px] font-mono leading-tight transition-all duration-300 ${lastAccess.status === 'hit' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
                                         lastAccess.status === 'miss' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
                                             'bg-slate-950 border-slate-700 text-slate-500'
                                         }`}>
-                                        <span className="font-bold opacity-70 block mb-0.5">LAST OPERATION:</span>
-                                        {lastAccess.msg}
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="font-bold opacity-70 block">LAST OPERATION:</span>
+                                            {lastAccess.status === 'hit' && <Zap size={12} className="animate-pulse" />}
+                                        </div>
+                                        <div className="font-bold text-xs mb-2">{lastAccess.msg}</div>
+                                        {lastAccess.explanation && (
+                                            <div className="text-[10px] opacity-90 border-t border-dashed border-white/10 pt-1 mt-1 font-sans italic">
+                                                "{lastAccess.explanation}"
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -302,7 +339,28 @@ const PengalamatanMemori = () => {
                 </div>
 
                 {/* 2. SYSTEM SPACE (CPU & CACHE) */}
-                <div className="flex flex-col justify-start gap-4">
+                <div className="flex flex-col justify-start gap-4 relative">
+
+                    {/* DATA BUS ANIMATION OVERLAY */}
+                    {busAnimation && (
+                        <div className="absolute inset-0 pointer-events-none z-50 flex flex-col items-center justify-center">
+                            {busAnimation === 'ram-to-cache' && (
+                                <div className="absolute bottom-[-20%] right-[-20%] bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg animate-[bus-travel-up_1s_ease-in-out_forwards] flex items-center gap-1">
+                                    <Database size={10} /> FETCH RAM
+                                </div>
+                            )}
+                            {busAnimation === 'cache-to-cpu' && (
+                                <div className="absolute top-[40%] bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg animate-[bus-travel-up_0.5s_ease-out_forwards] flex items-center gap-1">
+                                    <Zap size={10} /> READ CACHE
+                                </div>
+                            )}
+                            {busAnimation === 'cpu-to-cache' && (
+                                <div className="absolute top-[20%] bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg animate-[bus-travel-down_0.5s_ease-out_forwards] flex items-center gap-1">
+                                    <Save size={10} /> WRITE
+                                </div>
+                            )}
+                        </div>
+                    )}
                     {/* CPU Registers Block */}
                     <div className="bg-slate-800 rounded-xl border border-slate-600 shadow-xl relative overflow-hidden">
                         <div className="bg-gradient-to-r from-orange-900/20 to-slate-800 p-4 border-b border-slate-600 flex justify-between items-center">
@@ -481,6 +539,20 @@ const PengalamatanMemori = () => {
                     onClose={() => setShowQuiz(false)}
                 />
             )}
+            <style>{`
+                @keyframes bus-travel-up {
+                    0% { transform: translateY(100px) scale(0.8); opacity: 0; }
+                    20% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { transform: translateY(-50px) scale(1.1); opacity: 0; }
+                }
+                @keyframes bus-travel-down {
+                    0% { transform: translateY(-50px) scale(0.8); opacity: 0; }
+                    20% { opacity: 1; }
+                    80% { opacity: 1; }
+                    100% { transform: translateY(100px) scale(1.1); opacity: 0; }
+                }
+            `}</style>
         </div>
     );
 };

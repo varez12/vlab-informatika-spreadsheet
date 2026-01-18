@@ -19,7 +19,7 @@ import {
     Filter,
     ArrowUpDown,
     GalleryHorizontalEnd,
-    GalleryHorizontalEnd,
+
     Download,
     Trophy
 } from 'lucide-react';

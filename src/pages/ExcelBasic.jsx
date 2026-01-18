@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     Grid, HelpCircle, BookOpen, Play, Pause, Lightbulb, ChevronDown,
-    Grid, HelpCircle, BookOpen, Play, Pause, Lightbulb, ChevronDown,
+
     Calculator, Plus, TrendingUp, TrendingDown, Hash, BarChart2, AlertCircle, Trophy
 } from 'lucide-react';
 import QuizMode, { excelBasicQuizQuestions } from '../components/QuizMode';

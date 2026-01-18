@@ -18,7 +18,6 @@ import {
     Target,
     PauseCircle,
     Plus,
-    Plus,
     Hash
 } from 'lucide-react';
 import QuizMode, { numberConversionQuizQuestions } from '../components/QuizMode';
